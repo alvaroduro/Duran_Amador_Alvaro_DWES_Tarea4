@@ -1,17 +1,17 @@
-<?php require_once '../includes/header.php'; ?>
+<?php require_once 'includes/header.php'; ?>
 
 <body>
     <!--Barra Navegación-->
     <nav class="navbar navbar-expand-lg bg-body-tertiary">
         <div class="container-fluid">
-            <a class="navbar-brand" href="login.php"><img src="../img/blog.png" alt="blog" width="50px" height="50px">BGU</a>
+            <a class="navbar-brand" href="index.php"><img src="img/blog.png" alt="blog" width="50px" height="50px">BGU</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="login.php">Inicio</a>
+                        <a class="nav-link active" aria-current="page" href="index.php">Inicio</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="#">Contacto</a>
@@ -27,22 +27,26 @@
         </div>
     </nav>
 
-    <!--Título encabezado-->
+    <!--TITULO encabezado-->
     <div class="encabezadoinicio">
-        <h1>Login de Usuarios</h1>
+        <h1>Acceso Usuarios</h1>
     </div>
 
+    <!--FORMULARIO-->
     <div class="formularioLogin">
-        <form class="formulario" action="" method="POST"><!--Enviamos los datos-->
-            <!-- Imagen superior -->
-            <img src="../img/formuser.png" alt="Login">
+        <form class="formulario" action="index.php?accion=validarLogin" method="POST"><!--Enviamos los datos-->
+
+            <!-- Imagen superior form-->
+            <img src="img/formuser.png" alt="Login">
             <div class="mb-3">
+
                 <!--Usuario-->
-                <label for="usuario" class="form-label"> Usuario</label>
+                <label for="email" class="form-label"> Email</label>
                 <div class="d-flex col">
+
                     <!--Insertamos el nombre usuario aterior si hubiese-->
-                    <input class="form-control" name="usuario" type="text" placeholder="Nombre usuario" aria-label="default input example">
-                    <img class="border rounded bg-body-secondary" src="../img/user_login.png" width="40px" height="40px" />
+                    <input class="form-control" name="email" type="text" placeholder="Email" aria-label="default input example" value="<?= isset($_COOKIE['usuario']) ? $_COOKIE['usuario'] : '' ?>">
+                    <img class="border rounded bg-body-secondary" src="img/user_login.png" width="40px" height="40px" />
                 </div>
                 <?php /*if (empty($_POST['usuario'])) {
                     echo $msgresultadoCampo;
@@ -54,14 +58,45 @@
                 <label for="password" class="form-label">Contraseña</label>
                 <div class="d-flex col">
                     <input class="form-control" name="password" type="password">
-                    <img class="border rounded bg-body-secondary" src="../img/contrasena_login.png" width="40px" height="40px" />
+                    <img class="border rounded bg-body-secondary" src="img/contrasena_login.png" width="40px" height="40px" />
                 </div>
-                <?php /*if (empty($_POST['password'])) {
+
+            </div>
+
+            <!-- Opciones de sesión -->
+            <!-- Recordar Usuario -->
+            <div class="mb-3 form-check">
+                <input type="checkbox" class="form-check-input" name="recordar" id="recordar"
+                    <?= isset($_COOKIE['usuario']) ? 'checked' : '' ?>>
+                <label class="form-check-label" for="recordar">Recordar usuario</label>
+            </div>
+
+            <!-- Mantener Sesion Abierta -->
+            <div class="mb-3 form-check">
+                <input type="checkbox" class="form-check-input" name="mantenerSesion" id="mantenerSesion">
+                <label class="form-check-label" for="mantenerSesion">Mantener sesión activa</label>
+            </div>
+            <?php //var_dump($this->mensajes) 
+            ?>
+            <?php //var_dump($parametros['mensajes']) 
+            ?>
+
+            <?php
+            if (!empty($parametros["mensajes"])) {
+                // Mostramos los mensajes procedentes del controlador que se hayn generado
+                foreach ($parametros["mensajes"] as $mensaje) : ?>
+                    <div class="alert alert-<?= $mensaje["tipo"] ?>"><?= $mensaje["mensaje"] ?></div>
+            <?php endforeach;
+            }
+            ?>
+            <?php /*if (empty($_POST['password'])) {
                     echo $msgresultadoCampo;
                 } */ ?> <!-- Mensaje de resultado campos vacíos-->
-            </div>
+
+
+            <!--BTN Iniciar sesion-->
             <button name="btningresar" type="submit" class="btn btn-primary">INICIAR SESION</button>
         </form>
     </div>
 </body>
-<?php require_once '../includes/footer.php'; ?>
+<?php require_once 'includes/footer.php'; ?>

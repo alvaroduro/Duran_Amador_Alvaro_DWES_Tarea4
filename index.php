@@ -1,4 +1,3 @@
-<?php require_once 'includes/header.php'; ?>
 <?php
 require_once 'controladores/controlador.php'; //Incluimos metodos del controlador
 
@@ -16,9 +15,8 @@ if ($_GET && $_GET['accion']) {
     //Verificamos que el objeto controlador que hemos creado implementa el 
     //método que le hemos asignado mediqante el GET
     if (method_exists($controlador, $accion)) {
-        
+
         $controlador->$accion(); //Ejecutamos la acccion que indicamos 
-        echo $accion;
     } else {
         $controlador->index(); //Si no, redirigimos a la pag inicio
     }
@@ -27,8 +25,6 @@ if ($_GET && $_GET['accion']) {
 }
 
 ?>
-<?php require_once 'includes/footer.php'; ?>
-
 
 <!--
 * El acceso a la aplicación se realiza desde el fichero index.php, script que se encargará de invocar los métodos del controlador asociados a lo senlaces pulsados en la vista inicio.php.

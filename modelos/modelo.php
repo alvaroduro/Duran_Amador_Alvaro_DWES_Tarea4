@@ -59,4 +59,123 @@ class modelo
             return FALSE;
         endif;
     }
+
+    /**
+     * Funcion para traer un usuario de la base de datos y con el id
+     * Devuelve un array con los resultados obtenidos
+     * @return array (correcto,datos,error)
+     */
+    public function listausuario($id)
+    {
+        $return = [
+            "correcto" => FALSE,
+            "datos" => NULL,
+            "error" => NULL
+        ];
+
+        if ($id && is_numeric($id)) {
+            try {
+                $sql = "SELECT * FROM usuarios WHERE id=:id";
+                $query = $this->conexion->prepare($sql);
+                $query->execute(['id' => $id]);
+                //Supervisamos que la consulta se realizó correctamente... 
+                if ($query) {
+                    $return["correcto"] = TRUE;
+                    $return["datos"] = $query->fetch(PDO::FETCH_ASSOC);
+
+                    //Si no devuelve ningun dato
+                    if (empty($return["datos"])) {
+                        $return["correcto"] = FALSE;
+                        $return["error"] = "No existe ningún usuario con ese Email";
+                    }
+                } // o no :(
+            } catch (PDOException $ex) {
+                $return["error"] = $ex->getMessage();
+                //die();
+            }
+        }
+
+        return $return;
+    }
+
+    /**
+     * Funcion que al pasarle un email y un password busca en la Base de Datos
+     * y nos devuelve si existen los campos o si no 
+     * @return array (correcto,datos,error)
+     */
+    public function login($email, $password)
+    {
+        $return = [
+            "correcto" => FALSE,
+            "datos" => NULL,
+            "error" => NULL
+        ];
+
+        // Si hay un email lo filtramos y validamos
+        if ($email && filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            try {
+                $sql = "SELECT * FROM usuarios WHERE email = :email";
+                $query = $this->conexion->prepare($sql);
+                $query->execute(['email' => $email]);
+
+                // Si encuentra algun resultado
+                if ($query->rowCount() > 0) {
+
+                    // Guardamos el resultado en una variable
+                    $usuario = $query->fetch(PDO::FETCH_ASSOC);
+
+                    // Iniciamos sesion 
+                    session_start();
+                    $_SESSION['usuario'] = $usuario; //Guardamos la sesion del usuario
+
+                    // Verificamos la contraseña (asumiendo que está hasheada con password_hash())
+                    if (password_verify($password, password_hash($_SESSION['usuario']['contrasenia'], PASSWORD_DEFAULT))) {
+
+                        // Almacenamos en nuestra variable los resultados
+                        $return["correcto"] = TRUE;
+                        $return["datos"] = $usuario;
+                        var_dump($return);
+                    }
+                }
+            } catch (PDOException $ex) {
+                $return["error"] = $ex->getMessage();
+            }
+        }
+
+        return $return;
+    }
+
+    /**
+     * Funcion para buscar datos en la base de datos de las diferentes tablas
+     * segun la consulta que manejamos y la almacenamos en un array junto con
+     * @return type datos, o mensaje de error base de datos
+     */
+    public function listado($id)
+    {
+        //Variable para devolver los resultados
+        $return = ["correcto" => FALSE, "datos" => NULL, "error" => NULL];
+
+        //Realizamos la consulta
+        try {
+            $sql = "SELECT * FROM entradas e 
+        INNER JOIN usuarios u ON e.idUsuario = u.iduser
+        WHERE u.iduser = :id";
+
+            $resultquery = $this->conexion->prepare($sql);
+            $resultquery->execute(['id' => $id]);
+
+            //Supervisamos si todo ha ido bien
+            if ($resultquery) {
+                //Si la consulta ha ido bien
+                $return['correcto'] = TRUE;
+                //Almacenamos todos los datos del usuario
+                $return['datos'] = $resultquery->fetchAll(PDO::FETCH_ASSOC);
+                var_dump($return);
+            }
+        } catch (Exception $ex) {
+            $return['error'] = $ex->getMessage();
+        }
+        //Devolvemos la variable con sus parametros
+        return $return;
+    }
 }

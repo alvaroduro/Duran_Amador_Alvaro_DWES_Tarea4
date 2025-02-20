@@ -58,16 +58,10 @@ html {
   margin-bottom: 15px; /* Espacio entre la imagen y el formulario */
 }
 
-/* Inputs */
-.formulario input {
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    height: 40px;
-}
-/* Inputs */
+/* label */
 .formulario label {
-    font-weight: bold;
-    font-size: 20px;
+  font-weight: bold;
+  font-size: 20px;
 }
 
 .lista {
