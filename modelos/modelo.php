@@ -154,11 +154,11 @@ class modelo
     {
         //Variable para devolver los resultados
         $return = ["correcto" => FALSE, "datos" => NULL, "error" => NULL];
-
+        $id = $_SESSION['usuario']['iduser'];
         //Realizamos la consulta
         try {
 
-            // Si es user traemos sus resultados
+            // Si es USUARIO traemos sus resultados
             if ($_SESSION['usuario']['rol'] == 'user') {
                 $sql = "SELECT 
                         c.nombrecat AS categoria, 
@@ -174,9 +174,13 @@ class modelo
                     FROM entradas e
                     JOIN usuarios u ON e.idUsuario = u.iduser
                     JOIN categoria c ON e.idCategoria = c.idcat
-                    WHERE u.iduser = :id";
+                    WHERE u.iduser = :id
+                    ORDER BY e.fecha DESC";
 
-                // Si es Admin traemos todas las entradas
+                $resultquery = $this->conexion->prepare($sql);
+                $resultquery->execute(['id' => $id]);
+
+                // Si es ADMIN traemos todas las entradas
             } elseif ($_SESSION['usuario']['rol'] == 'admin') {
                 $sql = "SELECT 
                         c.nombrecat AS categoria, 
@@ -187,12 +191,12 @@ class modelo
                         u.iduser
                     FROM entradas e
                     JOIN usuarios u ON e.idUsuario = u.iduser
-                    JOIN categoria c ON e.idCategoria = c.idcat";
+                    JOIN categoria c ON e.idCategoria = c.idcat
+                    ORDER BY e.fecha DESC";
+
+                $resultquery = $this->conexion->prepare($sql);
+                $resultquery->execute();
             }
-
-
-            $resultquery = $this->conexion->prepare($sql);
-            $resultquery->execute();
 
             //Supervisamos si todo ha ido bien
             if ($resultquery) {

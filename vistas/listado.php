@@ -66,8 +66,8 @@
             <?php } elseif ($_SESSION['usuario']['rol'] == 'admin') { ?>
                 <!----------------ADMIN---------------->
 
-                <!--Agregar Libros-->
-                <a class="navbar-brand mx-2" href="index.php?accion=agregarentrada">Agregar Nueva Entrada<img class="mx-2" width="40" height="40" src="img/nuevaentrada.png" alt="agregar libro"></a>
+                <!--Salir login-->
+                <a class="navbar-brand mx-2" href="index.php?accion=logout">Cerrar Sesión<img class="mx-2" src="img/exit.png" alt="salir" width="40" height="40"></a>
 
             <?php } ?>
 
@@ -83,6 +83,9 @@
             <tr>
                 <th>Categoría</th>
                 <th>Título</th>
+                <th><?php if ($_SESSION['usuario']['rol'] == 'admin') {
+                        echo "Email";
+                    }  ?></th>
                 <th>Imagen</th>
                 <th>Descripción</th>
                 <th>Fecha</th>
@@ -95,6 +98,9 @@
                 <tr>
                     <td><?php echo ucfirst($d['categoria']) ?></td>
                     <td><?php echo ucfirst($d['titulo']) ?></td>
+                    <td><?php if ($_SESSION['usuario']['rol'] == 'admin') {
+                            echo ucfirst($d['email']);
+                        }  ?></td>
                     <?php if ($d['imagen'] != NULL && file_exists("fotos/" . $d['imagen'])) { ?>
                         <td><img src="fotos/<?php echo $d['imagen'] ?>" alt="" width="50" height="50"></td>
                     <?php } else { ?>

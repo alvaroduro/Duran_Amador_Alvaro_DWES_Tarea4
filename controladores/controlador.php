@@ -8,7 +8,7 @@ class controlador
     //Podremos acceder a los datos y las operaciones de la BD desde el controlador
     private $modelo;
 
-    //$mensajes se utiliza para almacenr los sms generados en las tareas,
+    //$mensajes se utiliza para almacenar los sms generados en las tareas,
     //que sean luego transmitidos a la vista 
     private $mensajes;
 
