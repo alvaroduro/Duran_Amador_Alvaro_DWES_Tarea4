@@ -10,7 +10,7 @@ if ($_GET && $_GET['accion']) {
     //Sanitizamos los dato que recibamos mediante el GET+
     $accion = filter_input(INPUT_GET, 'accion', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
     //convierte caracteres especiales en entidades HTML, previniendo inyecciones de código malicioso.
-    echo $accion;
+    //echo $accion;
 
     //Verificamos que el objeto controlador que hemos creado implementa el 
     //método que le hemos asignado mediqante el GET

@@ -134,7 +134,7 @@ class modelo
                         // Almacenamos en nuestra variable los resultados
                         $return["correcto"] = TRUE;
                         $return["datos"] = $usuario;
-                        var_dump($return);
+                        //var_dump($return);
                     }
                 }
             } catch (PDOException $ex) {
@@ -157,12 +157,42 @@ class modelo
 
         //Realizamos la consulta
         try {
-            $sql = "SELECT * FROM entradas e 
-        INNER JOIN usuarios u ON e.idUsuario = u.iduser
-        WHERE u.iduser = :id";
+
+            // Si es user traemos sus resultados
+            if ($_SESSION['usuario']['rol'] == 'user') {
+                $sql = "SELECT 
+                        c.nombrecat AS categoria, 
+                        e.ident,
+                        e.titulo, 
+                        e.imagen, 
+                        e.descripcion, 
+                        e.fecha, 
+                        u.email, 
+                        u.nombre, 
+                        u.avatar, 
+                        u.iduser
+                    FROM entradas e
+                    JOIN usuarios u ON e.idUsuario = u.iduser
+                    JOIN categoria c ON e.idCategoria = c.idcat
+                    WHERE u.iduser = :id";
+
+                // Si es Admin traemos todas las entradas
+            } elseif ($_SESSION['usuario']['rol'] == 'admin') {
+                $sql = "SELECT 
+                        c.nombrecat AS categoria, 
+                        e.*,
+                        u.email, 
+                        u.nombre, 
+                        u.avatar, 
+                        u.iduser
+                    FROM entradas e
+                    JOIN usuarios u ON e.idUsuario = u.iduser
+                    JOIN categoria c ON e.idCategoria = c.idcat";
+            }
+
 
             $resultquery = $this->conexion->prepare($sql);
-            $resultquery->execute(['id' => $id]);
+            $resultquery->execute();
 
             //Supervisamos si todo ha ido bien
             if ($resultquery) {
@@ -170,7 +200,7 @@ class modelo
                 $return['correcto'] = TRUE;
                 //Almacenamos todos los datos del usuario
                 $return['datos'] = $resultquery->fetchAll(PDO::FETCH_ASSOC);
-                var_dump($return);
+                //var_dump($return);
             }
         } catch (Exception $ex) {
             $return['error'] = $ex->getMessage();

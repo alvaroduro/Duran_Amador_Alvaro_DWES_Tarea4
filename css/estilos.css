@@ -75,6 +75,5 @@ html {
   display: flex;
   justify-content: center; /* Centra la tabla horizontalmente */
   align-items: center; /* Centra la tabla verticalmente (si hay más contenido en la página) */
-  margin: 30px auto; /* Agrega margen de 10px y centra */
   border: 2px solid blue;
 }

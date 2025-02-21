@@ -82,7 +82,7 @@ class controlador
                     // Vemos los checkbox
                     $recordar = isset($_POST['recordar']);
                     $mantenerSesion = isset($_POST['mantenerSesion']);
-                    var_dump($email);
+                    //var_dump($email);
 
                     // Si el usuario quiere recordar su email
                     if ($recordar) {
@@ -96,11 +96,11 @@ class controlador
                         setcookie("mantenerSesion", $_SESSION['usuario']['nombre'], time() + (86400 * 30), "/"); // Sesión por 30 días
                     }
 
-                    //Relizamos el listado de los usuarios
+                    //Relizamos el listado de los Entradas
                     $this->listado();
 
                     // Mostramos la vista del listado
-                    
+
                     include_once 'vistas/listado.php';
 
                     // Si las creedenciales no son correctas
@@ -119,6 +119,9 @@ class controlador
     }
 
 
+    /**
+     * Funcion que muestra el listado de las categorias de cada usuario
+     */
     public function listado()
     {
         //Almacenamos en el array los valores mostrados en la vista
@@ -128,7 +131,7 @@ class controlador
             "mensajes" => []
         ];
 
-        var_dump($_SESSION['usuario']['iduser']);
+        //var_dump($_SESSION['usuario']['iduser']);
         //Realizamos la consulta y almacenamos en nuestra variable
         $resultsModelo = $this->modelo->listado($_SESSION['usuario']['iduser']);
 
@@ -160,5 +163,27 @@ class controlador
 
         //incluimos la vista a mostrar
         include_once 'vistas/listado.php';
+    }
+
+    /**
+     * Función para eliminar las sesiones y las cookies del usuario
+     * Mostramos por último la vista de login de nuevo
+     */
+    public function logout()
+    {
+        session_start(); // Asegura que la sesión está iniciada
+
+        // Si hay cookies de sesión activas, las eliminamos
+        if (isset($_COOKIE['usuario'])) {
+            setcookie('usuario', '', time() - 3600, '/'); // Expira la cookie
+        }
+
+        // Destruir la sesión
+        session_destroy();
+
+        // Redirigir al login
+        //incluimos la vista a mostrar
+        include_once 'vistas/login.php';
+        exit();
     }
 }
