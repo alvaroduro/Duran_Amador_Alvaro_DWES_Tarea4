@@ -48,9 +48,6 @@
                     <input class="form-control" name="email" type="text" placeholder="Email" aria-label="default input example" value="<?= isset($_COOKIE['usuario']) ? $_COOKIE['usuario'] : '' ?>">
                     <img class="border rounded bg-body-secondary" src="img/user_login.png" width="40px" height="40px" />
                 </div>
-                <?php /*if (empty($_POST['usuario'])) {
-                    echo $msgresultadoCampo;
-                } */ ?> <!-- Mensaje de resultado campos vacíos-->
             </div>
 
             <!--Password-->
@@ -100,3 +97,4 @@
     </div>
 </body>
 <?php require_once 'includes/footer.php'; ?>
+</html>

@@ -124,8 +124,7 @@ class modelo
                     // Guardamos el resultado en una variable
                     $usuario = $query->fetch(PDO::FETCH_ASSOC);
 
-                    // Iniciamos sesion 
-                    session_start();
+                    // Guardamos la sesion del usuario
                     $_SESSION['usuario'] = $usuario; //Guardamos la sesion del usuario
 
                     // Verificamos la contraseña (asumiendo que está hasheada con password_hash())
@@ -210,6 +209,79 @@ class modelo
             $return['error'] = $ex->getMessage();
         }
         //Devolvemos la variable con sus parametros
+        return $return;
+    }
+
+    /**
+     * Funcion mediante la cual a traves de 3 parámetros:
+     * Campo de la tabl, tabla y dato a validar, nos devuelve si existe o no en la 
+     * tabla
+     * @return array si es correcto o no(existe o no en la BD)
+     */
+    public function verificarCampo($campo, $tabla, $dato)
+    {
+        try {
+            // Consulta para verificar si el campo existe en la tabla especificada
+            $sql = "SELECT COUNT(*) AS total FROM $tabla WHERE $campo = :dato";
+            $query = $this->conexion->prepare($sql);
+            $query->execute(['dato' => $dato]);
+
+            // Obtenemos el resultado de la consulta
+            $resultado = $query->fetch(PDO::FETCH_ASSOC);
+
+            // Si el resultado es mayor que 0, el campo existe
+            if ($resultado['total'] > 0) {
+                $return = FALSE;
+            } else {
+                $return = TRUE;
+            };
+        } catch (PDOException $ex) {
+            // Manejo del error - mostramos el posible error
+            $return = $ex->getMessage();
+        }
+
+        return $return;
+    }
+
+    public function agregarentrada($datos)
+    {
+        $return = [
+            "correcto" => FALSE,
+            "error" => NULL
+        ];
+
+        try {
+            //Inicializamos la transacción
+            $this->conexion->beginTransaction();
+
+            //Definimos la instrucción SQL parametrizada 
+            $sql = "INSERT INTO entradas(idusuario,idcategoria,titulo,imagen,descripcion,fecha)
+                         VALUES (:idusuario,:idcategoria,:titulo,:imagen,:descripcion,:fecha)";
+
+            // Preparamos la consulta...
+            $query = $this->conexion->prepare($sql);
+
+            // y la ejecutamos indicando los valores que tendría cada parámetro
+            $query->execute([
+                'idusuario' => $_SESSION['usuario']['iduser'],
+                'idcategoria' => $datos["categoria"],
+                'titulo' => $datos["titulo"],
+                'imagen' => $datos["imagen"],
+                'descripcion' => $datos["descripcion"],
+                'fecha' => $datos["fecha"]
+            ]);
+
+            //Supervisamos si la inserción se realizó correctamente... 
+            if ($query) {
+                $this->conexion->commit(); // commit() confirma los cambios realizados durante la transacción
+                $return["correcto"] = TRUE;
+            } // o no :(
+        } catch (PDOException $ex) {
+            $this->conexion->rollback(); // rollback() se revierten los cambios realizados durante la transacción
+            $return["error"] = $ex->getMessage();
+            //die();
+        }
+
         return $return;
     }
 }

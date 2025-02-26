@@ -35,6 +35,16 @@ class controlador
     }
 
     /**
+     * Funcion para iniciar sesion en caso de que no haya una iniciada
+     */
+    function iniciarSesion()
+    {
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
+    }
+
+    /**
      * Funcion para validar el login del usuario. Mediante el metodo POST rcibimos una 
      * respuesta y la evaluamos si exite, y guardamos en variables los resultados.
      */
@@ -59,8 +69,9 @@ class controlador
                 // Recogemos los datos del login si no están vacíos
                 $email = $_POST['email'];
                 $password =  ($_POST['password']); //Encriptamos el pass
-                //$recordar = isset($_POST['recordar']); //Pulsado btn recordar user
-                //$mantenerSesion = isset($_POST['mantenerSesion']); //sesion abierta
+
+                // Iniciamos sesión
+                $this->iniciarSesion();
 
                 // Guardamos en una variable los datos obtenidos del metodo de modelo
                 $resultadomodelo = $this->modelo->login($email, $password);
@@ -100,7 +111,6 @@ class controlador
                     $this->listado();
 
                     // Mostramos la vista del listado
-
                     include_once 'vistas/listado.php';
 
                     // Si las creedenciales no son correctas
@@ -118,20 +128,24 @@ class controlador
         }
     }
 
-
     /**
      * Funcion que muestra el listado de las categorias de cada usuario
      */
     public function listado()
     {
+
+        // Iniciamos sesión
+        $this->iniciarSesion();
+
+        $this->compruebasesion(); //Comprobamos si hay sesion de usuario iniciada
+
         //Almacenamos en el array los valores mostrados en la vista
         $parametros = [
-            "tituloventana" => "MVC Blog con PHP y PDO",
+            "tituloventana" => "Listado Entradas",
             "datos" => NULL,
             "mensajes" => []
         ];
 
-        //var_dump($_SESSION['usuario']['iduser']);
         //Realizamos la consulta y almacenamos en nuestra variable
         $resultsModelo = $this->modelo->listado($_SESSION['usuario']['iduser']);
 
@@ -171,13 +185,16 @@ class controlador
      */
     public function logout()
     {
-        session_start(); // Asegura que la sesión está iniciada
-
-        // Si hay cookies de sesión activas, las eliminamos
-        if (isset($_COOKIE['usuario'])) {
-            setcookie('usuario', '', time() - 3600, '/'); // Expira la cookie
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
         }
 
+        // Si hay cookies de sesión activas, las eliminamos
+        /*if (isset($_COOKIE['usuario'])) {
+            setcookie('usuario', '', time() - 3600, '/'); // Expira la cookie
+        }*/
+
+        session_unset(); //Liberamos las variables de la sesión
         // Destruir la sesión
         session_destroy();
 
@@ -186,4 +203,216 @@ class controlador
         include_once 'vistas/login.php';
         exit();
     }
+
+    /**
+     * Funcion para comprobar si la sesion se ha iniciado correctamente
+     * En caso contrario realizaremos la fx logout y saldremos al login
+     */
+    public function compruebasesion()
+    {
+
+        if (!isset($_SESSION['usuario'])) {
+            $this->logout();
+        }
+    }
+
+    public function agregarentrada()
+    {
+        // Iniciamos sesión
+        $this->iniciarSesion();
+
+        var_dump($_SESSION['usuario']);
+        /**
+         * Script que muestra en una tabla los valores enviados por el usuario a través 
+         * del formulario utilizando el método POST
+         */
+
+        // Definimos e inicializamos el array de errores
+        // Definimos e inicializamos el array de errores y las variables asociadas a cada campo
+        $errores = [];
+        $categoria = "";
+        $titulo = "";
+        $descripcion = "";
+        $fecha = "";
+
+        // Función que muestra el mensaje de error bajo el campo que no ha superado
+        // el proceso de validación
+        function mostrar_error($errores, $campo)
+        {
+            $alert = "";
+            if (isset($errores[$campo]) && (!empty($campo))) {
+                $alert = '<div class="alert alert-danger" style="margin-top:5px;">' . $errores[$campo] . '</div>';
+            }
+            return $alert;
+        }
+
+        // Visualización de las variables obtenidas mediante el formulario en modal
+        function valoresfrm($categoria, $titulo, $fecha, $descripcion)
+        {
+            echo "<h4>Datos de la entrada <b>" . $titulo . "</b> obtenidos mediante el formulario</h4><br/>";
+            echo "<strong>Categoría: </strong>" . $categoria . "<br/>";
+            echo "<strong>Titulo: </strong>" . $titulo . "<br/>";
+            echo "<strong>Fecha Publicación: </strong>" . $fecha . "<br/>";
+            echo "<strong>Descripcion: </strong>" . $descripcion . "<br/>";
+            echo "<strong>Imagen: </strong>Imagen recibida<br/>";
+        }
+
+
+        // Si se ha pulsado el  botón guardar...
+        if (isset($_POST) && !empty($_POST) && isset($_POST['submit'])) {
+            $parametros = "";
+
+            //Validamos Campos
+
+            //Campo idCategoria
+            if (
+                !empty($_POST["categoria"])
+                && ($_POST["categoria"] == "accesorios" || $_POST["categoria"] == "consolas")
+            ) {
+
+                //Dfinimos el idCategoria
+                if ($categoria == "accesorios") {
+                    $categoria = 1;
+                } else {
+                    $categoria = 2;
+                }
+                //echo  "categoria: <b>" . $categoria . "</b><br/>";
+            } else {
+                $errores["categoria"] = "Debes elegir una categoría válido";
+            }
+
+            //Campo Título
+            if (
+                !empty($_POST["titulo"]) &&
+                (strlen($_POST["titulo"]) < 100)
+            ) {
+                //Satinizamos
+                $titulo = htmlspecialchars(trim($_POST['titulo']));
+                //echo  "Título: <b>" . $titulo . "</b><br/>";
+            } else {
+                $errores["titulo"] = "No puede estar vacío/No puede contener más de 20 caracteres";
+            }
+
+            //Campo Fecha Publicación
+            if (!empty($_POST["fecha"])) {
+                //Guardamos fecha
+                $fecha = $_POST["fecha"];
+                //$fechaFormateada = date('m/Y', strtotime($fecha)); //Convertimos la fecha al formato deseado
+                //echo "Fecha de Publicación: <b>" . $fechaFormateada . "</b><br/>";
+            } else {
+                $errores["fecha"] = "Fecha errónea";
+            }
+
+            //Campo Descripcion
+            if (
+                !empty($_POST["descripcion"])
+            ) {
+                //Satinizamos
+                $descripcion = $_POST["descripcion"];
+                $descripcion = trim($descripcion); // Eliminamos espacios en blanco
+                $descripcion = htmlspecialchars($descripcion); //Caracteres especiales a HTML
+                $descripcion = stripslashes($descripcion); //Elimina barras invertidas
+                //echo  "Descripción: <b>" . $descripcion . "</b><br/>";
+            } else {
+                $errores["descripcion"] = "No puede estar vacío";
+            }
+
+            //Campo Imagen
+            if (!isset($_FILES["imagen"]) || empty($_FILES["imagen"]["tmp_name"])) {
+                $errores["imagen"] = "Seleccione una imagen válida";
+            } else {
+                /* Realizamos la carga de la imagen en el servidor */
+                //       Comprobamos que el campo tmp_name tiene un valor asignado para asegurar que hemos
+                //       recibido la imagen correctamente
+                //       Definimos la variable $imagen que almacenará el nombre de imagen 
+                //       que almacenará la Base de Datos inicializada a NULL
+                $imagen = NULL;
+
+                //CAMPO IMAGEN--
+                if (isset($_FILES["imagen"]) && (!empty($_FILES["imagen"]["tmp_name"]))) {
+                    // Verificamos la carga de la imagen
+                    // Comprobamos si existe el directorio fotos, y si no, lo creamos
+                    if (!is_dir("fotos")) {
+                        $dir = mkdir("fotos", 0777, true);
+                    } else {
+                        $dir = true;
+                    }
+
+                    // Ya verificado que la carpeta uploads existe movemos el fichero seleccionado a dicha carpeta
+                    if ($dir) {
+                        //Para asegurarnos que el nombre va a ser único...
+                        $nombrefichimg = time() . "-" . $_FILES["imagen"]["name"];
+                        // Movemos el fichero de la carpeta temportal a la nuestra
+                        $movfichimg = move_uploaded_file($_FILES["imagen"]["tmp_name"], "fotos/" . $nombrefichimg);
+
+                        // Definimos el nombre (ruta) de la imagen
+                        $imagen = $nombrefichimg;
+
+                        // Verficamos que la carga se ha realizado correctamente
+                        if ($movfichimg) {
+                            $imagencargada = true;
+                            //$imagen = "La imagen nos ha llegado<br/>";
+                        } else {
+                            $imagencargada = false;
+                            $this->mensajes[] = [
+                                "tipo" => "danger",
+                                "mensaje" => "Error: La imagen no se cargó correctamente! :(",
+                            ];
+                            $errores["imagen"] = "Error: La imagen no se cargó correctamente! :(";
+                        }
+                    }
+                } else {
+                    $errores["imagen"] = "Error en portada, imagen vacía o no recibida";
+                }
+            } //Fin Imagen
+
+            // Si no se han producido errores realizamos el registro del usuario
+            if (count($errores) == 0) {
+                echo "no hay errores = vamos a modelo";
+                // Guardamos los valores para la ventana modal
+
+                $resultModelo = $this->modelo->agregarentrada([
+                    'categoria' => $categoria,
+                    "titulo" => $titulo,
+                    'descripcion' => $descripcion,
+                    'imagen' => $imagen,
+                    'fecha' => $fecha
+                ]);
+
+
+                // Si se ha insertado bien en la base de datos
+                if ($resultModelo["correcto"]) {
+                    $this->mensajes[] = [
+                        "tipo" => "success",
+                        "mensaje" => "La entrada se registró correctamente!! :)"
+                    ];
+                } else {
+                    $this->mensajes[] = [
+                        "tipo" => "danger",
+                        "mensaje" => "El usuario no pudo registrarse!! :( <br />({$resultModelo["error"]})"
+                    ];
+                }
+            } else {
+                $this->mensajes[] = [
+                    "tipo" => "danger",
+                    "mensaje" => "Datos de registro de usuario erróneos!! :("
+                ];
+            }
+        } //Fin pulsar guardar
+        $parametros = [
+            "tituloventana" => "Base de Datos con PHP y PDO",
+            "datos" => [
+                "categoria" => isset($_POST['categoria']) ? $categoria : "",
+                "titulo" => isset($_POST['titulo']) ? $titulo : "",
+                "descripcion" => isset($_POST['descripcion']) ? $descripcion : "",
+                "fecha" => isset($_POST['fecha']) ? $fecha : "",
+                "imagen" => isset($_POST['imagen']) ? $imagen : ""
+            ],
+            "mensajes" => $this->mensajes
+        ];
+
+        //var_dump($parametros);
+        //Visualizamos la vista asociada al registro de usuarios
+        include_once 'vistas/agregarentrada.php';
+    } //Fin Agregarentrada
 }
