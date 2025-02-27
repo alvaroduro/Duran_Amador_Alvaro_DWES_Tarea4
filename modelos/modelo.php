@@ -213,6 +213,44 @@ class modelo
     }
 
     /**
+     * Método para obtener los datos de una entrada específica en la base de datos.
+     *
+     * @param int $id Identificador único de la entrada a consultar.
+     *
+     * @return array Retorna un array con los siguientes valores:
+     *               - 'correcto' (bool): Indica si la consulta se realizó correctamente.
+     *               - 'datos' (array|null): Contiene los datos de la entrada si la consulta fue exitosa, NULL en caso contrario.
+     *               - 'error' (string|null): Contiene el mensaje de error en caso de fallo.
+     */
+    public function listarentrada($id)
+    {
+        $return = [
+            "correcto" => FALSE,
+            "datos" => NULL,
+            "error" => NULL
+        ];
+
+        if ($id && is_numeric($id)) {
+            try {
+                $sql = "SELECT * FROM entradas WHERE ident=:id";
+                $query = $this->conexion->prepare($sql);
+                $query->execute(['id' => $id]);
+                //Supervisamos que la consulta se realizó correctamente... 
+                if ($query) {
+                    $return["correcto"] = TRUE;
+                    $return["datos"] = $query->fetch(PDO::FETCH_ASSOC);
+                } // o no :(
+            } catch (PDOException $ex) {
+                $return["error"] = $ex->getMessage();
+                //die();
+            }
+        }
+
+        return $return;
+    }
+
+
+    /**
      * Funcion mediante la cual a traves de 3 parámetros:
      * Campo de la tabl, tabla y dato a validar, nos devuelve si existe o no en la 
      * tabla
@@ -243,6 +281,14 @@ class modelo
         return $return;
     }
 
+    /**
+     * Agrega una nueva entrada en la base de datos.
+     *
+     * @param array $datos Datos de la entrada a agregar (categoría, título, imagen, descripción, fecha).
+     * @return array Retorna un array con:
+     *               - "correcto" (bool): TRUE si la inserción fue exitosa, FALSE si hubo un error.
+     *               - "error" (string|null): Mensaje de error en caso de fallo.
+     */
     public function agregarentrada($datos)
     {
         $return = [
@@ -274,6 +320,98 @@ class modelo
             //Supervisamos si la inserción se realizó correctamente... 
             if ($query) {
                 $this->conexion->commit(); // commit() confirma los cambios realizados durante la transacción
+                $return["correcto"] = TRUE;
+            }
+            // o no :(
+        } catch (PDOException $ex) {
+            $this->conexion->rollback(); // rollback() se revierten los cambios realizados durante la transacción
+            $return["error"] = $ex->getMessage();
+            //die();
+        }
+
+        return $return;
+    }
+
+
+    /**
+     * Elimina una entrada de la base de datos según su ID.
+     *
+     * @param int $id ID de la entrada a eliminar.
+     * @return array Retorna un array con:
+     *               - "correcto" (bool): TRUE si la eliminación fue exitosa, FALSE si hubo un error.
+     *               - "error" (string|null): Mensaje de error en caso de fallo.
+     */
+    public function delent($id)
+    {
+        // La función devuelve un array con dos valores:'correcto', que indica si la
+        // operación se realizó correctamente, y 'mensaje', campo a través del cual le
+        // mandamos a la vista el mensaje indicativo del resultado de la operación
+        $return = [
+            "correcto" => FALSE,
+            "error" => NULL
+        ];
+
+        //Si hemos recibido el id y es un número realizamos el borrado...
+        if ($id && is_numeric($id)) {
+            try {
+                //Inicializamos la transacción
+                $this->conexion->beginTransaction();
+
+                //Definimos la instrucción SQL parametrizada 
+                $sql = "DELETE FROM entradas WHERE ident=:id";
+                $query = $this->conexion->prepare($sql);
+                $query->execute(['id' => $id]);
+
+                //Supervisamos si la eliminación se realizó correctamente... 
+                if ($query) {
+                    $this->conexion->commit();  // commit() confirma los cambios realizados durante la transacción
+                    $return["correcto"] = TRUE;
+                } // o no :(
+            } catch (PDOException $ex) {
+                $this->conexion->rollback(); // rollback() se revierten los cambios realizados durante la transacción
+                $return["error"] = $ex->getMessage();
+            }
+        } else {
+            $return["correcto"] = FALSE;
+        }
+
+        return $return;
+    }
+
+    /**
+     * Método para actualizar una entrada en la base de datos.
+     *
+     * @param array $datos Datos de la entrada a actualizar
+     *
+     * @return array Retorna un array con:
+     *               - 'correcto' (bool): Indica si la actualización fue exitosa.
+     *               - 'error' (string|null): Mensaje de error en caso de fallo.
+     */
+    public function actentrada($datos)
+    {
+        $return = [
+            "correcto" => FALSE,
+            "error" => NULL
+        ];
+
+        try {
+            //Inicializamos la transacción
+            $this->conexion->beginTransaction();
+            //Definimos la instrucción SQL parametrizada 
+            $sql = "UPDATE entradas SET idUsuario= :idUsuario, idCategoria= :idCategoria, titulo= :titulo, imagen= :imagen, fecha= :fecha, descripcion= :descripcion WHERE ident=:id";
+            $query = $this->conexion->prepare($sql);
+            $query->execute([
+                'id' => $datos["id"],
+                'idUsuario' => $datos["iduser"],
+                'idCategoria' => $datos["categoria"],
+                'titulo' => $datos["titulo"],
+                'fecha' => $datos["fecha"],
+                'descripcion' => $datos["descripcion"],
+                'imagen' => $datos["imagen"]
+            ]);
+            //Supervisamos si la inserción se realizó correctamente... 
+            if ($query) {
+                $this->conexion->commit();  // commit() confirma los cambios realizados durante la transacción
                 $return["correcto"] = TRUE;
             } // o no :(
         } catch (PDOException $ex) {

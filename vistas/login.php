@@ -73,11 +73,8 @@
                 <input type="checkbox" class="form-check-input" name="mantenerSesion" id="mantenerSesion">
                 <label class="form-check-label" for="mantenerSesion">Mantener sesión activa</label>
             </div>
-            <?php //var_dump($this->mensajes) 
-            ?>
-            <?php //var_dump($parametros['mensajes']) 
-            ?>
 
+            <!--Mostramos los posibles errores-->
             <?php
             if (!empty($parametros["mensajes"])) {
                 // Mostramos los mensajes procedentes del controlador que se hayn generado
@@ -86,10 +83,6 @@
             <?php endforeach;
             }
             ?>
-            <?php /*if (empty($_POST['password'])) {
-                    echo $msgresultadoCampo;
-                } */ ?> <!-- Mensaje de resultado campos vacíos-->
-
 
             <!--BTN Iniciar sesion-->
             <button name="btningresar" type="submit" class="btn btn-primary">INICIAR SESION</button>
@@ -97,4 +90,5 @@
     </div>
 </body>
 <?php require_once 'includes/footer.php'; ?>
+
 </html>

@@ -32,16 +32,13 @@
         <h1>Lista Categorias</h1>
     </div>
 
-    <?php //var_dump($_SESSION['usuario']) 
-    ?>
-
     <!--Mensaje Bienvenida-->
     <div class="container d-flex justify-content-end">
         <p class="fs-5 me-2">Bienvenido, </p>
         <p class="fs-5 fw-bold text-uppercase mx-2"><img class="me-2" src="fotos/<?php echo $_SESSION['usuario']['avatar']; ?>" alt="avatar" width="30px" height="30px"><?php echo $_SESSION['usuario']['nombre']; ?></p>
     </div>
 
-    <!--Menú para los diferentes roles (user admin)-->
+    <!--Menú para los diferentes roles (user admin) botones-->
     <div class="container mt-5 justify-content-center">
         <div class="d-flex flex-row mb-5 justify-content-evenly">
 
@@ -72,6 +69,16 @@
 
     <!--Creamos la tabla para mostrar las Entradas-->
     <h2 class="text-center w-100"> Tabla de tus Entradas <img src="img/tablaentradas.jpg" alt="tablaentradas" width="100" height="80"> Almacenadas</h2>
+
+    <!--Mostramos los posibles errores-->
+    <?php
+    if (!empty($parametros["mensajes"])) {
+        // Mostramos los mensajes procedentes del controlador que se hayn generado
+        foreach ($parametros["mensajes"] as $mensaje) : ?>
+            <div class="alert mx-auto w-50 text-center alert-<?= $mensaje["tipo"] ?>"><?= $mensaje["mensaje"] ?></div>
+    <?php endforeach;
+    }
+    ?>
     <div class="table-container mx-4">
         <table class="table table-striped text-center align-middle">
 
@@ -110,8 +117,20 @@
                     <!--Enviamos a actentrada.php o delentrada, mediante GET, el id del registro que deseamos editar o eliminar-->
                     <td class="col-12 col-sm-4 my-2">
                         <div class="d-flex flex-column flex-md-row justify-content-center align-items-center gap-2">
+
+                            <!--BOTON EDITAR-->
                             <a class="btn btn-primary w-80 w-md-auto" href="index.php?accion=actentrada&id=<?php echo $d['ident'] ?>">Editar</a>
-                            <a class="btn btn-danger w-80 w-md-auto" href="index.php?accion=delentrada&id=<?php echo $d['ident'] ?>">Eliminar</a>
+
+                            <!--BOTON ELIMINAR-->
+                            <a class="btn btn-danger w-80 w-md-auto"
+                                data-bs-toggle="modal"
+                                data-bs-target="#confirmarEliminarModal"
+                                data-id="<?php echo $d['ident']; ?>"
+                                data-titulo="<?php echo $d['titulo']; ?>">
+                                Eliminar
+                            </a>
+
+                            <!--BOTON DETALLE-->
                             <a class="btn btn-success w-80 w-md-auto" href="index.php?accion=detalleentrada&id=<?php echo $d['ident'] ?>">Detalle</a>
                         </div>
                     </td>
@@ -119,6 +138,10 @@
             <?php } ?>
         </table>
     </div>
+    <!-- Incluir la modal de confirmación -->
+    <?php include 'includes/modaleliminar.php'; ?>
+    <script src="js/modalconfirmareliminar.js"></script>
+
 </body>
 <?php require_once 'includes/footer.php'; ?>
 
