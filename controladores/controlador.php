@@ -358,6 +358,7 @@ class controlador
                     if ($dir) {
                         //Para asegurarnos que el nombre va a ser único...
                         $nombrefichimg = time() . "-" . $_FILES["imagen"]["name"];
+                        
                         // Movemos el fichero de la carpeta temportal a la nuestra
                         $movfichimg = move_uploaded_file($_FILES["imagen"]["tmp_name"], "fotos/" . $nombrefichimg);
 
@@ -706,5 +707,58 @@ class controlador
         ];
         //Mostramos la vista actuser
         include_once 'vistas/actentrada.php';
+    }
+
+    public function detalleentrada()
+    {
+
+        // Iniciamos sesión
+        $this->iniciarSesion();
+
+        // verificamos que hemos recibido los parámetros desde la vista de listado 
+        if (isset($_GET['id']) && (is_numeric($_GET['id']))) {
+            $id = $_GET["id"];
+
+            //Realizamos la operación de suprimir el usuario con el id=$id
+            $resultModelo = $this->modelo->detallentrada($id);
+            //var_dump($resultModelo);
+
+            //Analizamos el valor devuelto por el modelo para definir el mensaje a 
+            //mostrar en la vista listado
+            if ($resultModelo["correcto"]) :
+                $this->mensajes[] = [
+                    "tipo" => "success",
+                    "mensaje" => "Se encontró correctamente la entrada"
+                ];
+            else :
+                $this->mensajes[] = [
+                    "tipo" => "danger",
+                    "mensaje" => "La búsqueda de Entrada Blog no se realizó correctamente!! :( <br/>({$resultModelo["error"]})"
+                ];
+            endif;
+        } else { //Si no recibimos el valor del parámetro $id generamos el mensaje indicativo:
+            $this->mensajes[] = [
+                "tipo" => "danger",
+                "mensaje" => "No se pudo acceder al id de la Entrada a eliminar!! :("
+            ];
+        }
+
+        //Preparamos un array con todos los valores que tendremos que rellenar en
+        //la vista adduser: título de la página y campos del formulario
+        $parametros = [
+            "tituloventana" => "Base de Datos con PHP y PDO",
+            "datos" => [
+                "categoria" => $resultModelo['datos']['nombrecategoria'],
+                "titulo" => $resultModelo['datos']['titulo'],
+                "nombre"  => $resultModelo['datos']['nombreusuario'],
+                "descripcion"  => $resultModelo['datos']['descripcion'],
+                "avatar"  => $resultModelo['datos']['avatar'],
+                "imagen"    => $resultModelo['datos']['imagen'],
+                "fecha"  => $resultModelo['datos']['fecha']
+            ],
+            "mensajes" => $this->mensajes
+        ];
+        //Mostramos la vista detalle
+        include_once 'vistas/detalle.php';
     }
 }

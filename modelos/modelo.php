@@ -422,4 +422,49 @@ class modelo
 
         return $return;
     }
+
+    public function detallentrada($id)
+    {
+        // La función devuelve un array con dos valores:'correcto', que indica si la
+        // operación se realizó correctamente, y 'mensaje', campo a través del cual le
+        // mandamos a la vista el mensaje indicativo del resultado de la operación
+        $return = [
+            "correcto" => FALSE,
+            "error" => NULL
+        ];
+
+        //Si hemos recibido el id y es un número realizamos el borrado...
+        if ($id && is_numeric($id)) {
+            try {
+                //Inicializamos la transacción
+                $this->conexion->beginTransaction();
+
+                //Definimos la instrucción SQL parametrizada 
+                $sql = "SELECT 
+                e.ident, e.titulo, e.imagen, e.descripcion, e.fecha,
+                c.nombrecat AS nombrecategoria,
+                u.nombre AS nombreusuario, u.avatar
+                    FROM entradas e
+                    JOIN categoria c ON e.idCategoria = c.idcat
+                    JOIN usuarios u ON e.idUsuario = u.iduser
+                    WHERE e.ident = :id";
+                $query = $this->conexion->prepare($sql);
+                $query->execute(['id' => $id]);
+
+                //Supervisamos si la consulta se realizó correctamente... 
+                if ($query) {
+                    $this->conexion->commit();  // commit() confirma los cambios realizados durante la transacción
+                    $return["correcto"] = TRUE;
+                    $return["datos"] = $query->fetch(PDO::FETCH_ASSOC);
+                } // o no :(
+            } catch (PDOException $ex) {
+                $this->conexion->rollback(); // rollback() se revierten los cambios realizados durante la transacción
+                $return["error"] = $ex->getMessage();
+            }
+        } else {
+            $return["correcto"] = FALSE;
+        }
+
+        return $return;
+    }
 }
