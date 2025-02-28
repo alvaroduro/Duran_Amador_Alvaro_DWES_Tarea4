@@ -467,4 +467,132 @@ class modelo
 
         return $return;
     }
+
+    /**
+     * Listado por paginacion
+     * 
+     */
+    public function listadopag($id, $pagina = 1, $resultados_por_pagina = 8)
+    {
+        // Variable para devolver los resultados
+        $return = ["correcto" => FALSE, "datos" => NULL, "error" => NULL];
+
+        // Calcular el OFFSET
+        $offset = ($pagina - 1) * $resultados_por_pagina;
+
+        try {
+            // Si es USUARIO, traemos sus resultados
+            if ($_SESSION['usuario']['rol'] == 'user') {
+                $sql = "SELECT 
+                        c.nombrecat AS categoria, 
+                        e.ident,
+                        e.titulo, 
+                        e.imagen, 
+                        e.descripcion, 
+                        e.fecha, 
+                        u.email, 
+                        u.nombre, 
+                        u.avatar, 
+                        u.iduser
+                    FROM entradas e
+                    JOIN usuarios u ON e.idUsuario = u.iduser
+                    JOIN categoria c ON e.idCategoria = c.idcat
+                    WHERE u.iduser = :id
+                    ORDER BY e.fecha DESC
+                    LIMIT :limit OFFSET :offset";
+
+                $resultquery = $this->conexion->prepare($sql);
+                $resultquery->bindParam(':id', $id, PDO::PARAM_INT);
+                $resultquery->bindParam(':limit', $resultados_por_pagina, PDO::PARAM_INT);
+                $resultquery->bindParam(':offset', $offset, PDO::PARAM_INT);
+                $resultquery->execute();
+            } elseif ($_SESSION['usuario']['rol'] == 'admin') {
+                $sql = "SELECT 
+                        c.nombrecat AS categoria, 
+                        e.*,
+                        u.email, 
+                        u.nombre, 
+                        u.avatar, 
+                        u.iduser
+                    FROM entradas e
+                    JOIN usuarios u ON e.idUsuario = u.iduser
+                    JOIN categoria c ON e.idCategoria = c.idcat
+                    ORDER BY e.fecha DESC
+                    LIMIT :limit OFFSET :offset";
+
+                $resultquery = $this->conexion->prepare($sql);
+                $resultquery->bindParam(':limit', $resultados_por_pagina, PDO::PARAM_INT);
+                $resultquery->bindParam(':offset', $offset, PDO::PARAM_INT);
+                $resultquery->execute();
+            }
+
+            // Supervisamos si todo ha ido bien
+            if ($resultquery) {
+                $return['correcto'] = TRUE;
+                $return['datos'] = $resultquery->fetchAll(PDO::FETCH_ASSOC);
+            }
+        } catch (Exception $ex) {
+            $return['error'] = $ex->getMessage();
+        }
+
+        return $return;
+    }
+
+    /** Función para obtener el total de entradas de un usuario específico */
+    public function totalEntradasPorUsuario($id)
+    {
+
+        $return = [
+            "correcto" => FALSE,
+            "datos" => NULL,
+            "error" => NULL
+        ];
+
+        // Verificamos que el id sea válido
+        if ($id && is_numeric($id)) {
+            try {
+                $sql = "SELECT COUNT(*) AS total FROM entradas WHERE idUsuario = :id";
+                $query = $this->conexion->prepare($sql);
+                $query->execute(['id' => $id]);
+
+                // Verificamos si la consulta fue exitosa
+                if ($query) {
+                    $result = $query->fetch(PDO::FETCH_ASSOC);
+                    $return["correcto"] = TRUE;
+                    $return["datos"] = $result["total"];  // El total de entradas del usuario
+                }
+            } catch (PDOException $ex) {
+                $return["error"] = $ex->getMessage();
+            }
+        }
+
+        return $return;
+    }
+
+    /** Función para obtener el total de todas las entradas sin filtrar por usuario */
+    public function totalEntradasGenerales()
+    {
+        $return = [
+            "correcto" => FALSE,
+            "datos" => NULL,
+            "error" => NULL
+        ];
+
+        try {
+            $sql = "SELECT COUNT(*) AS total FROM entradas";
+            $query = $this->conexion->prepare($sql);
+            $query->execute();
+
+            // Verificamos si la consulta fue exitosa
+            if ($query) {
+                $result = $query->fetch(PDO::FETCH_ASSOC);
+                $return["correcto"] = TRUE;
+                $return["datos"] = $result["total"];  // El total de todas las entradas
+            }
+        } catch (PDOException $ex) {
+            $return["error"] = $ex->getMessage();
+        }
+
+        return $return;
+    }
 }

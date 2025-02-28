@@ -83,17 +83,19 @@
         <table class="table table-striped text-center align-middle">
 
             <!--Mostramos resultados-->
-            <tr class="fs-5">
-                <th>Categoría</th>
-                <th>Título</th>
-                <th><?php if ($_SESSION['usuario']['rol'] == 'admin') {
-                        echo "Email";
-                    }  ?></th>
-                <th>Imagen</th>
-                <th>Descripción</th>
-                <th>Fecha</th>
-                <th class="text-center" colspan="3">Operaciones</th>
-            </tr>
+            <thead>
+                <tr class="fs-5">
+                    <th>Categoría</th>
+                    <th>Título</th>
+                    <th><?php if ($_SESSION['usuario']['rol'] == 'admin') {
+                            echo "Email";
+                        }  ?></th>
+                    <th>Imagen</th>
+                    <th>Descripción</th>
+                    <th>Fecha</th>
+                    <th class="text-center" colspan="3">Operaciones</th>
+                </tr>
+            </thead>
 
             <!--Mostramos los datos traidos-->
             <?php foreach ($parametros['datos'] as $d) { ?>
@@ -109,7 +111,8 @@
                     <?php } else { ?>
                         <td>---</td>
                     <?php } ?>
-                    <td><?php echo ucfirst($d['descripcion']) ?></td>
+                    <td><?php echo ucfirst(html_entity_decode($d['descripcion']));
+                        //var_dump($d['descripcion']) ?></td>
 
                     <!--Convertimos la fecha a formato d/m/a-->
                     <td><?php echo date("d/m/Y", strtotime($d['fecha'])); ?></td>
@@ -138,6 +141,37 @@
             <?php } ?>
         </table>
     </div>
+    <!-- Paginación -->
+    <nav>
+        <ul class="pagination justify-content-center my-5">
+            <?php
+
+            // Número total de entradas
+            $totalEntradas = $parametros['totalresultados']['datos']; // Este número debería ser dinámico (por ejemplo, contando las entradas de la base de datos)
+            //var_dump($totalEntradas);
+
+
+            $totalPaginas = ceil($totalEntradas / 8); // 10 es el número de resultados por página
+
+
+            // Página anterior
+            if ($parametros['pagina'] > 1) {
+                echo '<li class="page-item"><a class="page-link" href="index.php?accion=listadopag&pagina=' . ($parametros['pagina'] - 1) . '">Anterior</a></li>';
+            }
+
+            // Páginas
+            for ($i = 1; $i <= $totalPaginas; $i++) {
+                $active = ($parametros['pagina'] == $i) ? 'active' : '';
+                echo '<li class="page-item ' . $active . '"><a class="page-link" href="index.php?accion=listadopag&pagina=' . $i . '">' . $i . '</a></li>';
+            }
+
+            // Página siguiente
+            if ($parametros['pagina'] < $totalPaginas) {
+                echo '<li class="page-item"><a class="page-link" href="index.php?accion=listadopag&pagina=' . ($parametros['pagina'] + 1) . '">Siguiente</a></li>';
+            }
+            ?>
+        </ul>
+    </nav>
     <!-- Incluir la modal de confirmación -->
     <?php include 'includes/modaleliminar.php'; ?>
     <script src="js/modalconfirmareliminar.js"></script>

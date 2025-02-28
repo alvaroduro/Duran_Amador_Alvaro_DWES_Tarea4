@@ -111,7 +111,7 @@ class controlador
                     }
 
                     //Relizamos el listado de los Entradas
-                    $this->listado();
+                    $this->listadopag();
 
                     // Mostramos la vista del listado
                     include_once 'vistas/listado.php';
@@ -358,7 +358,7 @@ class controlador
                     if ($dir) {
                         //Para asegurarnos que el nombre va a ser único...
                         $nombrefichimg = time() . "-" . $_FILES["imagen"]["name"];
-                        
+
                         // Movemos el fichero de la carpeta temportal a la nuestra
                         $movfichimg = move_uploaded_file($_FILES["imagen"]["tmp_name"], "fotos/" . $nombrefichimg);
 
@@ -760,5 +760,71 @@ class controlador
         ];
         //Mostramos la vista detalle
         include_once 'vistas/detalle.php';
+    }
+
+    /**
+     * Listado por paginacion
+     * 
+     */
+
+    public function listadopag()
+    {
+
+        // Iniciamos sesión
+        $this->iniciarSesion();
+
+        // Parámetros para la vista
+        $parametros = [
+            "tituloventana" => "Listado Entradas",
+            "datos" => NULL,
+            "mensajes" => [],
+            "pagina" => 1, // Página por defecto
+            "totalresultados" => 0 //Empezamos por 0
+        ];
+
+        // Comprobamos si hay un parámetro 'pagina' en la URL
+        if (isset($_GET['pagina'])) {
+            $parametros['pagina'] = (int)$_GET['pagina'];
+        }
+
+        //var_dump($parametros['pagina']);
+        // Número de resultados por página
+        $resultados_por_pagina = 8;
+
+        //var_dump($_SESSION['usuario']);
+        // Total resultados de registros
+        if ($_SESSION['usuario']['rol'] == "user") {
+            //echo "controlado user";
+            $parametros['totalresultados'] = $this->modelo->totalEntradasPorUsuario($_SESSION['usuario']['iduser']);
+            // var_dump($parametros['totalresultados']);
+        } else if ($_SESSION['usuario']['rol'] == "admin") {
+            //echo "controlado admin";
+            $parametros['totalresultados'] = $this->modelo->totalEntradasGenerales();
+        }
+
+        // Obtenemos los resultados desde el modelo
+        $resultsModelo = $this->modelo->listadopag($_SESSION['usuario']['iduser'], $parametros['pagina'], $resultados_por_pagina);
+
+        if ($resultsModelo["correcto"]) {
+            $parametros['datos'] = $resultsModelo['datos'];
+            $this->mensajes[] = [
+                "tipo" => "success",
+                "mensaje" => "El listado se realizó correctamente"
+            ];
+        } else {
+            $this->mensajes[] = [
+                "tipo" => "danger",
+                "mensaje" => "El listado no pudo realizarse correctamente!! <br/>({$resultsModelo['error']})"
+            ];
+            $parametros['mensajes'] = $this->mensajes;
+            include_once 'vistas/login.php';
+            return;
+        }
+
+        // Asignamos los mensajes al array de parámetros
+        $parametros['mensajes'] = $this->mensajes;
+
+        // Incluimos la vista
+        include_once 'vistas/listado.php';
     }
 }

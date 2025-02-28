@@ -40,7 +40,7 @@
     <!--Enlaces listado-->
     <div class="d-flex flex-row mb-5 justify-content-evenly">
         <!--Atrás-->
-        <a class="navbar-brand mx-2 fs-5" href="index.php?accion=listado">Atrás<img class="mx-2" src="img/flechaAtras.png" alt="atras" width="40" height="40"></a>
+        <a class="navbar-brand mx-2 fs-5" href="index.php?accion=listadopag">Atrás<img class="mx-2" src="img/flechaAtras.png" alt="atras" width="40" height="40"></a>
 
         <!--Salir login-->
         <a class="navbar-brand mx-2 fs-5" href="index.php?accion=logout">Cerrar Sesión<img class="mx-2" src="img/exit.png" alt="salir" width="40" height="40"></a>
@@ -120,6 +120,18 @@
                     </textarea>
                     <?php echo mostrar_error($errores, "descripcion"); ?>
                 </div>
+
+                <!-- Incluyendo CKEditor desde CDN -->
+                <script src="https://cdn.ckeditor.com/ckeditor5/36.0.1/classic/ckeditor.js"></script>
+
+                <script>
+                    // Inicializar CKEditor en el textarea con id="descripcion"
+                    ClassicEditor
+                        .create(document.querySelector('#descripcion'))
+                        .catch(error => {
+                            console.error(error);
+                        });
+                </script>
 
                 <!-- Fecha -->
                 <!-- Fecha (Oculta) -->

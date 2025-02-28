@@ -41,7 +41,7 @@
     <!--Enlaces listado-->
     <div class="d-flex flex-row mb-5 justify-content-evenly">
         <!--Atrás-->
-        <a class="navbar-brand mx-2 fs-5" href="index.php?accion=listado">Atrás<img class="mx-2" src="img/flechaAtras.png" alt="atras" width="40" height="40"></a>
+        <a class="navbar-brand mx-2 fs-5" href="index.php?accion=listadopag">Atrás<img class="mx-2" src="img/flechaAtras.png" alt="atras" width="40" height="40"></a>
 
         <!--Salir login-->
         <a class="navbar-brand mx-2 fs-5" href="index.php?accion=logout">Cerrar Sesión<img class="mx-2" src="img/exit.png" alt="salir" width="40" height="40"></a>
@@ -81,7 +81,12 @@
         <img class="entrada-imagen" src="fotos/<?php echo htmlspecialchars($parametros['datos']['imagen']); ?>" alt="Imagen de la entrada" width="70" height="70">
 
         <h3><b>Descripcion</b></h3>
-        <p class="detalle-texto"><?php echo nl2br(htmlspecialchars($parametros['datos']['descripcion'])); ?></p>
+        <p class="detalle-texto">
+            <?php
+            // Permitir solo etiquetas <strong>, <b>, <i>, <p>, <ol>, <ul>, <li>, <h2>
+            echo html_entity_decode($parametros['datos']['descripcion']);
+            ?>
+        </p>
 
         <h3><b>Fecha:</b></h3>
         <p class="detalle-texto"><?php echo htmlspecialchars($parametros['datos']['fecha']); ?></p>
