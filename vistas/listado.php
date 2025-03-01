@@ -77,6 +77,11 @@
                     <a href="index.php?accion=crearTablaLogs" class="btn btn-secondary">Crear Tabla Logs<img class="mx-2" width="40" height="40" src="img/logs.png" alt="agregar entrada"></a>
                 </div>
 
+                <!-- Botón para listado en la tabla logs -->
+                <div class="text-center mx-2 fs-5">
+                    <a href="index.php?accion=listadopaglog" class="btn btn-success">Listado Logs<img class="mx-2" width="40" height="40" src="img/opLogs.png" alt="listado logs"></a>
+                </div>
+
             <?php } ?>
 
         </div>

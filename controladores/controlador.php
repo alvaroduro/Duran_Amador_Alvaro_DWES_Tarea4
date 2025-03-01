@@ -1053,4 +1053,89 @@ class controlador
         // Llamamos al modelo para registrar la operación
         $this->modelo->registrarLog($usuario, $operacion);
     }
+
+    public function listadopaglog()
+    {
+
+        // Iniciamos sesión
+        $this->iniciarSesion();
+
+        // Parámetros para la vista
+        $parametros = [
+            "tituloventana" => "Listado Entradas",
+            "datos" => NULL,
+            "mensajes" => [],
+            "pagina" => 1, // Página por defecto
+            "totalresultados" => 0 //Empezamos por 0
+        ];
+
+        // Comprobamos si hay un parámetro 'pagina' en la URL
+        if (isset($_GET['pagina'])) {
+            $parametros['pagina'] = (int)$_GET['pagina'];
+        }
+
+        //var_dump($parametros['pagina']);
+        // Número de resultados por página
+        $resultados_por_pagina = 4;
+
+        $parametros['totalresultados'] = $this->modelo->totalEntradasLog();
+
+        // Obtenemos los resultados desde el modelo
+        $resultsModelo = $this->modelo->listadopaglog($parametros['pagina'], $resultados_por_pagina);
+
+        if ($resultsModelo["correcto"]) {
+            $parametros['datos'] = $resultsModelo['datos'];
+            $this->mensajes[] = [
+                "tipo" => "success",
+                "mensaje" => "El listado logs se realizó correctamente"
+            ];
+        } else {
+            $this->mensajes[] = [
+                "tipo" => "danger",
+                "mensaje" => "El listado logs no pudo realizarse correctamente!! <br/>({$resultsModelo['error']})"
+            ];
+            $parametros['mensajes'] = $this->mensajes;
+        }
+
+        // Asignamos los mensajes al array de parámetros
+        $parametros['mensajes'] = $this->mensajes;
+
+        // Incluimos la vista
+        include_once 'vistas/listadologs.php';
+    }
+
+    public function eliminarentradalog()
+    {
+        $this->iniciarSesion();
+
+        // verificamos que hemos recibido los parámetros desde la vista de listado 
+        if (isset($_GET['id']) && (is_numeric($_GET['id']))) {
+            $id = $_GET["id"];
+
+            //Realizamos la operación de suprimir el usuario con el id=$id
+            $resultModelo = $this->modelo->delentlog($id);
+
+            //Analizamos el valor devuelto por el modelo para definir el mensaje a 
+            //mostrar en la vista listado
+            if ($resultModelo["correcto"]) :
+                $this->registrarOperacion("Eliminar"); // Registrar la acción en logs
+                $this->mensajes[] = [
+                    "tipo" => "success",
+                    "mensaje" => "Se eliminó correctamente el registro de log"
+                ];
+            else :
+                $this->mensajes[] = [
+                    "tipo" => "danger",
+                    "mensaje" => "La eliminación del registro logs no se realizó correctamente!! :( <br/>({$resultModelo["error"]})"
+                ];
+            endif;
+        } else { //Si no recibimos el valor del parámetro $id generamos el mensaje indicativo:
+            $this->mensajes[] = [
+                "tipo" => "danger",
+                "mensaje" => "No se pudo acceder al id de la Entrada a eliminar!! :("
+            ];
+        }
+        //Relizamos el listado de los usuarios
+        $this->listadopaglog(); // Redirigir al listado
+    }
 }

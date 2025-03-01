@@ -332,7 +332,6 @@ class modelo
         return $return;
     }
 
-
     /**
      * Elimina una entrada de la base de datos según su ID.
      *
@@ -596,6 +595,32 @@ class modelo
         return $return;
     }
 
+    public function totalEntradasLog()
+    {
+        $return = [
+            "correcto" => FALSE,
+            "datos" => NULL,
+            "error" => NULL
+        ];
+
+        try {
+            $sql = "SELECT COUNT(*) AS total FROM logs";
+            $query = $this->conexion->prepare($sql);
+            $query->execute();
+
+            // Verificamos si la consulta fue exitosa
+            if ($query) {
+                $result = $query->fetch(PDO::FETCH_ASSOC);
+                $return["correcto"] = TRUE;
+                $return["datos"] = $result["total"];  // El total de todas las entradas
+            }
+        } catch (PDOException $ex) {
+            $return["error"] = $ex->getMessage();
+        }
+
+        return $return;
+    }
+
     public function listadopagOrdenado($idUsuario, $pagina, $resultados_por_pagina, $orden)
     {
 
@@ -710,5 +735,80 @@ class modelo
         } catch (PDOException $ex) {
             return ["error" => $ex->getMessage()];
         }
+    }
+
+    /**
+     * Listado por paginacion
+     * 
+     */
+    public function listadopaglog($pagina = 1, $resultados_por_pagina = 4)
+    {
+        // Variable para devolver los resultados
+        $return = ["correcto" => FALSE, "datos" => NULL, "error" => NULL];
+
+        // Calcular el OFFSET
+        $offset = ($pagina - 1) * $resultados_por_pagina;
+
+        try {
+
+            $sql = "SELECT *
+                    FROM logs 
+                    ORDER BY fecha DESC
+                    LIMIT :limit OFFSET :offset";
+
+            $resultquery = $this->conexion->prepare($sql);
+            $resultquery->bindParam(':limit', $resultados_por_pagina, PDO::PARAM_INT);
+            $resultquery->bindParam(':offset', $offset, PDO::PARAM_INT);
+            $resultquery->execute();
+
+
+            // Supervisamos si todo ha ido bien
+            if ($resultquery) {
+                $return['correcto'] = TRUE;
+                $return['datos'] = $resultquery->fetchAll(PDO::FETCH_ASSOC);
+                //var_dump($return['datos']);
+            }
+        } catch (Exception $ex) {
+            $return['error'] = $ex->getMessage();
+        }
+
+        return $return;
+    }
+
+    public function delentlog($id)
+    {
+        // La función devuelve un array con dos valores:'correcto', que indica si la
+        // operación se realizó correctamente, y 'mensaje', campo a través del cual le
+        // mandamos a la vista el mensaje indicativo del resultado de la operación
+        $return = [
+            "correcto" => FALSE,
+            "error" => NULL
+        ];
+
+        //Si hemos recibido el id y es un número realizamos el borrado...
+        if ($id && is_numeric($id)) {
+            try {
+                //Inicializamos la transacción
+                $this->conexion->beginTransaction();
+
+                //Definimos la instrucción SQL parametrizada 
+                $sql = "DELETE FROM logs WHERE id=:id";
+                $query = $this->conexion->prepare($sql);
+                $query->execute(['id' => $id]);
+
+                //Supervisamos si la eliminación se realizó correctamente... 
+                if ($query) {
+                    $this->conexion->commit();  // commit() confirma los cambios realizados durante la transacción
+                    $return["correcto"] = TRUE;
+                } // o no :(
+            } catch (PDOException $ex) {
+                $this->conexion->rollback(); // rollback() se revierten los cambios realizados durante la transacción
+                $return["error"] = $ex->getMessage();
+            }
+        } else {
+            $return["correcto"] = FALSE;
+        }
+
+        return $return;
     }
 }
