@@ -47,20 +47,35 @@
             <?php if ($_SESSION['usuario']['rol'] == 'user') { ?>
                 <!----------------USUARIO---------------->
 
-                <!--Agregar Entrada-->
-                <a class="navbar-brand mx-2 fs-5" href="index.php?accion=agregarentrada">Agregar Nueva Entrada<img class="mx-2" width="40" height="40" src="img/nuevaentrada.png" alt="agregar entrada"></a>
-
                 <!--Salir login-->
-                <a class="navbar-brand mx-2 fs-5" href="index.php?accion=logout">Cerrar Sesión<img class="mx-2" src="img/exit.png" alt="salir" width="40" height="40"></a>
+                <a class="btn btn-warning mx-2" href="index.php?accion=logout">Cerrar Sesión<img class="mx-2" src="img/exit.png" alt="salir" width="40" height="40"></a>
+
+                <!--Agregar Entrada-->
+                <a class="btn btn-dark mx-2 fs-5" href="index.php?accion=agregarentrada">Agregar Nueva Entrada<img class="mx-2" width="40" height="40" src="img/nuevaentrada.png" alt="agregar entrada"></a>
+
+                <!-- Botón para generar el PDF -->
+                <div class="text-center mx-2 fs-5">
+                    <a href="index.php?accion=pdf" class="btn btn-info">Generar PDF<img class="mx-2" width="40" height="40" src="img/pdf.png" alt="agregar entrada"></a>
+                </div>
 
             <?php } elseif ($_SESSION['usuario']['rol'] == 'admin') { ?>
                 <!----------------ADMIN---------------->
 
                 <!--Salir login-->
-                <a class="navbar-brand mx-2" href="index.php?accion=logout">Cerrar Sesión<img class="mx-2" src="img/exit.png" alt="salir" width="40" height="40"></a>
+                <a class="btn btn-warning mx-2" href="index.php?accion=logout">Cerrar Sesión<img class="mx-2" src="img/exit.png" alt="salir" width="40" height="40"></a>
 
                 <!--Agregar Entrada-->
-                <a class="navbar-brand mx-2 fs-5" href="index.php?accion=agregarentrada">Agregar Nueva Entrada<img class="mx-2" width="40" height="40" src="img/nuevaentrada.png" alt="agregar entrada"></a>
+                <a class="btn btn-dark mx-2 fs-5" href="index.php?accion=agregarentrada">Agregar Nueva Entrada<img class="mx-2" width="40" height="40" src="img/nuevaentrada.png" alt="agregar entrada"></a>
+
+                <!-- Botón para generar el PDF -->
+                <div class="text-center mx-2 fs-5">
+                    <a href="index.php?accion=pdf" class="btn btn-info">Generar PDF<img class="mx-2" width="40" height="40" src="img/pdf.png" alt="agregar entrada"></a>
+                </div>
+
+                <!-- Botón para generar tabla log en la Base Datos -->
+                <div class="text-center mx-2 fs-5">
+                    <a href="index.php?accion=crearTablaLogs" class="btn btn-secondary">Crear Tabla Logs<img class="mx-2" width="40" height="40" src="img/logs.png" alt="agregar entrada"></a>
+                </div>
 
             <?php } ?>
 
@@ -92,7 +107,13 @@
                         }  ?></th>
                     <th>Imagen</th>
                     <th>Descripción</th>
-                    <th>Fecha</th>
+                    <th>Fecha <a class="mx-1" href="index.php?accion=listadopagOrdenado&orden=ASC">
+                            <img src="img/ascendente.png" alt="Orden Ascendente" width="25" height="25">
+                        </a>
+                        <a href="index.php?accion=listadopagOrdenado&orden=DESC">
+                            <img src="img/descendente.png" alt="Orden Descendente" width="25" height="25">
+                        </a>
+                    </th>
                     <th class="text-center" colspan="3">Operaciones</th>
                 </tr>
             </thead>
@@ -112,7 +133,8 @@
                         <td>---</td>
                     <?php } ?>
                     <td><?php echo ucfirst(html_entity_decode($d['descripcion']));
-                        //var_dump($d['descripcion']) ?></td>
+                        //var_dump($d['descripcion']) 
+                        ?></td>
 
                     <!--Convertimos la fecha a formato d/m/a-->
                     <td><?php echo date("d/m/Y", strtotime($d['fecha'])); ?></td>

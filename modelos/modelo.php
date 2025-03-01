@@ -595,4 +595,120 @@ class modelo
 
         return $return;
     }
+
+    public function listadopagOrdenado($idUsuario, $pagina, $resultados_por_pagina, $orden)
+    {
+
+
+        $return = [
+            "correcto" => FALSE,
+            "datos" => NULL,
+            "error" => NULL
+        ];
+        // Calcular el OFFSET
+        $offset = ($pagina - 1) * $resultados_por_pagina;
+
+        // Verificamos que el ID sea válido
+        if ($idUsuario && is_numeric($idUsuario)) {
+            try {
+
+                // USER
+                if ($_SESSION['usuario']['rol'] == 'user') {
+                    $sql = "SELECT 
+                        c.nombrecat AS categoria, 
+                        e.ident,
+                        e.titulo, 
+                        e.imagen, 
+                        e.descripcion, 
+                        e.fecha, 
+                        u.email, 
+                        u.nombre, 
+                        u.avatar, 
+                        u.iduser
+                    FROM entradas e
+                    JOIN usuarios u ON e.idUsuario = u.iduser
+                    JOIN categoria c ON e.idCategoria = c.idcat
+                    WHERE u.iduser = :id
+                    ORDER BY e.fecha $orden
+                    LIMIT :limit OFFSET :offset";
+
+                    $resultquery = $this->conexion->prepare($sql);
+                    $resultquery->bindParam(':id', $idUsuario, PDO::PARAM_INT);
+                    $resultquery->bindParam(':limit', $resultados_por_pagina, PDO::PARAM_INT);
+                    $resultquery->bindParam(':offset', $offset, PDO::PARAM_INT);
+                    $resultquery->execute();
+
+                    //ADMIN
+                } elseif ($_SESSION['usuario']['rol'] == 'admin') {
+
+                    $sql = "SELECT 
+                        c.nombrecat AS categoria, 
+                        e.*,
+                        u.email, 
+                        u.nombre, 
+                        u.avatar, 
+                        u.iduser
+                    FROM entradas e
+                    JOIN usuarios u ON e.idUsuario = u.iduser
+                    JOIN categoria c ON e.idCategoria = c.idcat
+                    ORDER BY e.fecha $orden
+                    LIMIT :limit OFFSET :offset";
+
+                    $resultquery = $this->conexion->prepare($sql);
+                    $resultquery->bindParam(':limit', $resultados_por_pagina, PDO::PARAM_INT);
+                    $resultquery->bindParam(':offset', $offset, PDO::PARAM_INT);
+                    $resultquery->execute();
+                }
+
+                if ($resultquery) {
+                    $result = $resultquery->fetchAll(PDO::FETCH_ASSOC);
+                    $return["correcto"] = TRUE;
+                    $return["datos"] = $result;
+                }
+            } catch (PDOException $ex) {
+                $return["error"] = $ex->getMessage();
+            }
+        }
+
+        return $return;
+    }
+
+    /**
+     * Funcion para ejecutar una consulta sql 
+     * Creada para la ejecutar la tabla logs del ejercicio 2.13
+     */
+    public function ejecutarSQL($sql)
+    {
+        try {
+
+            $query = $this->conexion->prepare($sql);
+            $query->execute();
+            // Verificamos si la consulta fue exitosa
+            if ($query) {
+                $return['correcto'] = true;
+                $return["datos"] = $query->fetch(PDO::FETCH_ASSOC);
+            }
+        } catch (PDOException $ex) {
+            $return["error"] = $ex->getMessage();
+        }
+
+        return $return;
+    }
+
+    /**
+     * Este método ejecutará el procedimiento almacenado cada vez que se llame.
+     */
+    public function registrarLog($usuario, $operacion)
+    {
+        try {
+            $sql = "CALL InsertarLog(:usuario, :operacion)";
+            $query = $this->conexion->prepare($sql);
+            $query->bindParam(':usuario', $usuario, PDO::PARAM_STR);
+            $query->bindParam(':operacion', $operacion, PDO::PARAM_STR);
+            $query->execute();
+            return true; // Éxito
+        } catch (PDOException $ex) {
+            return ["error" => $ex->getMessage()];
+        }
+    }
 }

@@ -452,6 +452,7 @@ class controlador
             //Analizamos el valor devuelto por el modelo para definir el mensaje a 
             //mostrar en la vista listado
             if ($resultModelo["correcto"]) :
+                $this->registrarOperacion("Eliminar"); // Registrar la acción en logs
                 $this->mensajes[] = [
                     "tipo" => "success",
                     "mensaje" => "Se eliminó correctamente la entrada"
@@ -469,7 +470,7 @@ class controlador
             ];
         }
         //Relizamos el listado de los usuarios
-        $this->listado();
+        $this->listadopagOrdenado(); // Redirigir al listado
     }
 
     /**
@@ -709,6 +710,9 @@ class controlador
         include_once 'vistas/actentrada.php';
     }
 
+    /**
+     * Obtiene y muestra el detalle de una entrada específica del blog.
+     */
     public function detalleentrada()
     {
 
@@ -763,10 +767,11 @@ class controlador
     }
 
     /**
-     * Listado por paginacion
+     * Listado por paginacion,  muestra los resultados en un 
+     * array llamado parametros con los datos, mensajes, pagina inicial
+     * y el total de resultaos de la consulta en modelo
      * 
      */
-
     public function listadopag()
     {
 
@@ -826,5 +831,226 @@ class controlador
 
         // Incluimos la vista
         include_once 'vistas/listado.php';
+    }
+
+    /**
+     * Genera y descarga un archivo PDF con el listado de entradas.
+     */
+    public function pdf()
+    {
+
+        // Limpia cualquier salida anterior para evitar errores en la generación del PDF
+        ob_clean(); // Limpia cualquier salida anterior al inicio
+
+        require('fpdf/fpdf.php'); // Incluye la biblioteca FPDF
+
+        // Iniciamos sesión
+        $this->iniciarSesion();
+        $this->compruebasesion(); //Comprobamos si hay sesion de usuario iniciada
+
+        // Vemos si es user o admin
+        //Realizamos la consulta y almacenamos en nuestra variable
+        $resultsModelo = $this->modelo->listado($_SESSION['usuario']['iduser']);
+
+        // Verificamos si la consulta fue exitosa
+        if ($resultsModelo['correcto']) {
+            // Creamos un nuevo objeto FPDF
+            $pdf = new FPDF();
+            $pdf->AddPage();
+            $pdf->SetFont('Arial', 'B', 12);
+
+            // Encabezado
+            $pdf->Cell(0, 10, 'Listado de Entradas', 0, 1, 'C');
+            $pdf->SetFont('Arial', 'B', 7);
+            $pdf->Ln(10);
+            $pdf->Cell(20, 10, 'Categoria', 1, 0, 'C');
+            $pdf->Cell(40, 10, 'Titulo', 1, 0, 'C');
+            if ($_SESSION['usuario']['rol'] == 'admin') {
+                $pdf->Cell(35, 10, 'Email', 1, 0, 'C');
+            }
+
+            $pdf->Cell(25, 10, 'Fecha', 1, 0, 'C');
+            $pdf->Cell(65, 10, 'Descripcion', 1, 1, 'C');
+
+            // Llenamos las filas con los datos
+            $pdf->SetFont('Arial', '', 6);
+
+            //var_dump($resultsModelo['datos']);
+            foreach ($resultsModelo['datos'] as $e) {
+                // Decodifica las entidades HTML de la descripción y elimina etiquetas HTML
+                $descripcionN = html_entity_decode($e["descripcion"]);
+                $pdf->Cell(20, 10, iconv('UTF-8', 'ISO-8859-1//TRANSLIT', $e['categoria']), 1, 0, 'C');
+
+                // Si el usuario es administrador, se agrega la columna de email
+                $pdf->Cell(40, 10, iconv('UTF-8', 'ISO-8859-1', $e['titulo']), 1, 0, 'C');
+                if ($_SESSION['usuario']['rol'] == 'admin') {
+                    $pdf->Cell(35, 10, iconv('UTF-8', 'ISO-8859-1', $e['email']), 1, 0, 'C');
+                }
+
+                $pdf->Cell(25, 10, date('d/m/Y', strtotime($e['fecha'])), 1, 0, 'C');
+                $pdf->MultiCell(65, 10, iconv('UTF-8', 'ISO-8859-1//TRANSLIT', strip_tags($descripcionN)), 1, 'C');
+
+                // Agrega un salto de línea para la siguiente fila
+                $pdf->Ln();
+            }
+        } else {
+            // Si hay un error en la consulta, muestra un mensaje en el PDF
+            $pdf->Cell(0, 10, 'Error al obtener datos: ' . $e->getMessage(), 0, 1);
+        }
+        // Enviar el archivo PDF al navegador
+        ob_end_clean(); // Limpia el buffer de salida
+        $pdf->Output('D', 'listado_entradas.pdf');
+    }
+
+    /**
+     * Función para mostrar un listado de registro entradas ordenados
+     * segun decida el usuario con un boton para acendente o descendente 
+     */
+    public function listadopagOrdenado()
+    {
+        // Iniciamos sesión
+        $this->iniciarSesion();
+
+        // Verificamos si hay un parámetro 'orden' en la URL
+        if (isset($_GET['orden']) && ($_GET['orden'] === 'ASC' || $_GET['orden'] === 'DESC')) {
+            $orden = $_GET['orden'];
+        } else {
+            $orden = 'DESC'; //Si no, ponemos por defecto uno
+        }
+
+        // Parámetros para la vista
+        $parametros = [
+            "tituloventana" => "Listado Entradas",
+            "datos" => NULL,
+            "mensajes" => [],
+            "pagina" => 1, // Página por defecto
+            "totalresultados" => 0, // Empezamos por 0
+            "orden" => $orden // Orden 
+        ];
+
+        // Verificamos si hay un parámetro 'pagina' en la URL
+        if (isset($_GET['pagina']) && is_numeric($_GET['pagina'])) {
+            $parametros['pagina'] = (int)$_GET['pagina'];
+        }
+
+        // Número de resultados por página
+        $resultados_por_pagina = 8;
+
+        // Verificamos el rol del usuario para obtener el total de entradas
+        if ($_SESSION['usuario']['rol'] == "user") {
+            $parametros['totalresultados'] = $this->modelo->totalEntradasPorUsuario($_SESSION['usuario']['iduser']);
+        } else if ($_SESSION['usuario']['rol'] == "admin") {
+
+            $parametros['totalresultados'] = $this->modelo->totalEntradasGenerales();
+            //var_dump($_SESSION['usuario']);
+            ///var_dump($parametros);
+        }
+
+        // Obtenemos los resultados desde el modelo, ahora con orden dinámico
+        $resultsModelo = $this->modelo->listadopagOrdenado($_SESSION['usuario']['iduser'], $parametros['pagina'], $resultados_por_pagina, $parametros['orden']);
+
+        if ($resultsModelo["correcto"]) {
+            $parametros['datos'] = $resultsModelo['datos'];
+            $this->mensajes[] = [
+                "tipo" => "success",
+                "mensaje" => "El listado se realizó correctamente"
+            ];
+        } else {
+            $this->mensajes[] = [
+                "tipo" => "danger",
+                "mensaje" => "El listado ordenado no pudo realizarse correctamente!! <br/>({$resultsModelo['error']})"
+            ];
+            $parametros['mensajes'] = $this->mensajes;
+            include_once 'vistas/login.php';
+            return;
+        }
+
+        // Asignamos los mensajes al array de parámetros
+        $parametros['mensajes'] = $this->mensajes;
+
+        // Incluimos la vista
+        include_once 'vistas/listado.php';
+    }
+
+    public function crearTablaLogs()
+    {
+        try {
+
+            // Iniciamos sesión
+            $this->iniciarSesion();
+            // Verificar si la tabla 'logs' ya existe
+            $sql_check = "SHOW TABLES LIKE 'logs'";
+            $query = $this->modelo->ejecutarSQL($sql_check);
+            var_dump($query["datos"]);
+            //var_dump(count($query["datos"]));
+
+            if ($query["datos"]) {
+
+                // La tabla ya existe, mensaje informativo
+                $this->mensajes[] = [
+                    "tipo" => "info",
+                    "mensaje" => "La tabla 'logs' ya existe en la base de datos."
+                ];
+            } else {
+
+                // Si la tabla no existe la creamos
+                // Conectamos con la base de datos
+                $sql = "CREATE TABLE IF NOT EXISTS logs (
+                        id INT AUTO_INCREMENT PRIMARY KEY,
+                        fecha DATE NOT NULL,
+                        hora TIME NOT NULL,
+                        usuario VARCHAR(100) NOT NULL,
+                        operacion VARCHAR(50) NOT NULL
+                    ) ENGINE=InnoDB";
+
+                // Ejecutamos la consulta
+                // Ejecutamos la consulta para crear la tabla
+                $resultado = $this->modelo->ejecutarSQL($sql);
+
+                // Guardamos los mensjaes posibles
+
+                //En caso de no ser correcto la creación de la tabla
+                if (!$resultado['correcto']) {
+                    $this->mensajes[] = [
+                        "tipo" => "danger",
+                        "mensaje" => "Error al crear la tabla 'logs': " . $resultado['error']
+                    ];
+                } else {
+                    $this->mensajes[] = [
+                        "tipo" => "success",
+                        "mensaje" => "La tabla 'logs' ha sido creada correctamente."
+                    ];
+                }
+            }
+        } catch (PDOException $ex) {
+            // Mensaje de error
+            $this->mensajes[] = [
+                "tipo" => "danger",
+                "mensaje" => "Error al crear la tabla 'logs': " . $ex->getMessage()
+            ];
+        }
+
+        // Asignamos los mensajes al array de parámetros
+        $parametros['mensajes'] = $this->mensajes;
+
+        // Redirigir a tablalog.php
+        include 'vistas/tablalog.php';
+    }
+
+    /**
+     * Este método llamará al del modelo y registrará el log automáticamente.
+     */
+    public function registrarOperacion($operacion)
+    {
+        $this->iniciarSesion();
+        // Verificar si el usuario está autenticado
+        if (isset($_SESSION['usuario']) && !empty($_SESSION['usuario']['email'])) {
+            $usuario = $_SESSION['usuario']['email']; // Obtener email del usuario
+        } else {
+            $usuario = "Desconocido"; // En caso de error
+        }
+
+        // Llamamos al modelo para registrar la operación
+        $this->modelo->registrarLog($usuario, $operacion);
     }
 }
