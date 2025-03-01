@@ -161,7 +161,7 @@ class controlador
          */
         if ($resultsModelo["correcto"]) {
             $parametros['datos'] = $resultsModelo['datos'];
-
+            $this->registrarOperacion("Listado"); // Registrar la acción en logs
             //Definimos un mensaje para el alert en la vista
             $this->mensajes[] = [
                 "tipo" => "success",
@@ -812,6 +812,7 @@ class controlador
 
         if ($resultsModelo["correcto"]) {
             $parametros['datos'] = $resultsModelo['datos'];
+            $this->registrarOperacion("Listado"); // Registrar la acción en logs
             $this->mensajes[] = [
                 "tipo" => "success",
                 "mensaje" => "El listado se realizó correctamente"
@@ -951,6 +952,7 @@ class controlador
 
         if ($resultsModelo["correcto"]) {
             $parametros['datos'] = $resultsModelo['datos'];
+            $this->registrarOperacion("Listado"); // Registrar la acción en logs
             $this->mensajes[] = [
                 "tipo" => "success",
                 "mensaje" => "El listado se realizó correctamente"
@@ -972,6 +974,14 @@ class controlador
         include_once 'vistas/listado.php';
     }
 
+    /**
+     * Función para crear la tabla de logs si no existe en la base de datos.
+     *
+     * Esta función verifica si la tabla 'logs' ya existe en la base de datos, 
+     * y si no es así, la crea. En caso de que la tabla ya exista, se muestra 
+     * un mensaje informativo. Los mensajes de éxito o error son almacenados 
+     * en el array de mensajes para ser mostrados en la vista.
+     */
     public function crearTablaLogs()
     {
         try {
@@ -1037,8 +1047,12 @@ class controlador
         include 'vistas/tablalog.php';
     }
 
+
     /**
-     * Este método llamará al del modelo y registrará el log automáticamente.
+     * Registra una operación en la tabla de logs.
+     * Este método es llamado para registrar automáticamente una operación.
+     *
+     * @param string $operacion La operación que se va a registrar.
      */
     public function registrarOperacion($operacion)
     {
@@ -1054,6 +1068,9 @@ class controlador
         $this->modelo->registrarLog($usuario, $operacion);
     }
 
+    /**
+     * Función para obtener y mostrar un listado paginado de los logs.
+     */
     public function listadopaglog()
     {
 
@@ -1104,6 +1121,11 @@ class controlador
         include_once 'vistas/listadologs.php';
     }
 
+    /**
+     * Elimina un registro de log por su ID.
+     *
+     * @param int $id El ID del registro de log que se desea eliminar.
+     */
     public function eliminarentradalog()
     {
         $this->iniciarSesion();
@@ -1137,5 +1159,64 @@ class controlador
         }
         //Relizamos el listado de los usuarios
         $this->listadopaglog(); // Redirigir al listado
+    }
+
+    /**
+     * Función para generar un archivo PDF con el listado de logs.
+     */
+    public function pdflog()
+    {
+
+        // Limpia cualquier salida anterior para evitar errores en la generación del PDF
+        ob_clean(); // Limpia cualquier salida anterior al inicio
+
+        require('fpdf/fpdf.php'); // Incluye la biblioteca FPDF
+
+        // Iniciamos sesión
+        $this->iniciarSesion();
+        $this->compruebasesion(); //Comprobamos si hay sesion de usuario iniciada
+
+        // Vemos si es user o admin
+        //Realizamos la consulta y almacenamos en nuestra variable
+        $resultsModelo = $this->modelo->listadolog();
+
+        // Verificamos si la consulta fue exitosa
+        if ($resultsModelo['correcto']) {
+            // Creamos un nuevo objeto FPDF
+            $pdf = new FPDF();
+            $pdf->AddPage();
+            $pdf->SetFont('Arial', 'B', 12);
+
+            // Encabezado
+            $pdf->Cell(0, 10, 'Listado de Logs', 0, 1, 'C');
+            $pdf->SetFont('Arial', 'B', 7);
+            $pdf->Ln(10);
+            $pdf->Cell(20, 10, 'Id', 1, 0, 'C');
+            $pdf->Cell(40, 10, 'fecha', 1, 0, 'C');
+            $pdf->Cell(40, 10, 'Hora', 1, 0, 'C');
+            $pdf->Cell(35, 10, 'Usuario', 1, 0, 'C');
+            $pdf->Cell(25, 10, 'Operacion', 1, 0, 'C');
+
+            // Llenamos las filas con los datos
+            $pdf->SetFont('Arial', '', 6);
+
+            //var_dump($resultsModelo['datos']);
+            foreach ($resultsModelo['datos'] as $e) {
+                $pdf->Cell(20, 10, $e['id'], 1, 0, 'C');
+                $pdf->Cell(40, 10, date('d/m/Y', strtotime($e['fecha'])), 1, 0, 'C');
+                $pdf->Cell(40, 10, date('H:i:s', strtotime($e['hora'])), 1, 0, 'C');
+                $pdf->Cell(35, 10, iconv('UTF-8', 'ISO-8859-1//TRANSLIT', $e['usuario']), 1, 0, 'C');
+                $pdf->Cell(25, 10, iconv('UTF-8', 'ISO-8859-1//TRANSLIT', $e['operacion']), 1, 0, 'C');
+
+                // Agrega un salto de línea para la siguiente fila
+                $pdf->Ln();
+            }
+        } else {
+            // Si hay un error en la consulta, muestra un mensaje en el PDF
+            $pdf->Cell(0, 10, 'Error al obtener datos: ' . $e->getMessage(), 0, 1);
+        }
+        // Enviar el archivo PDF al navegador
+        ob_end_clean(); // Limpia el buffer de salida
+        $pdf->Output('D', 'listado_logs.pdf');
     }
 }

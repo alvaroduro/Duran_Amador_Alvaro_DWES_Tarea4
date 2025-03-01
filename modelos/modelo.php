@@ -422,6 +422,21 @@ class modelo
         return $return;
     }
 
+    /**
+     * Método para obtener los detalles de una entrada específica.
+     *
+     * Este método devuelve los detalles de una entrada, incluyendo el título, imagen, 
+     * descripción, fecha, categoría y el nombre del usuario que la publicó. 
+     * Si se recibe un ID válido, se realiza una consulta a la base de datos 
+     * para obtener esta información.
+     *
+     * @param int $id El ID de la entrada que se desea consultar.
+     *
+     * @return array Retorna un array con:
+     *               - 'correcto' (bool): Indica si la consulta fue exitosa.
+     *               - 'datos' (array|null): Los detalles de la entrada solicitada.
+     *               - 'error' (string|null): Mensaje de error en caso de fallo.
+     */
     public function detallentrada($id)
     {
         // La función devuelve un array con dos valores:'correcto', que indica si la
@@ -468,8 +483,19 @@ class modelo
     }
 
     /**
-     * Listado por paginacion
-     * 
+     * Método para obtener un listado paginado de entradas.
+     *
+     * Dependiendo del rol del usuario, la función puede traer las entradas de un solo usuario (si es un "user")
+     * o todas las entradas (si es un "admin").
+     *
+     * @param int $id El ID del usuario al que se le buscan las entradas (en caso de ser un "user").
+     * @param int $pagina Número de la página que se desea obtener. El valor por defecto es 1.
+     * @param int $resultados_por_pagina El número de entradas a mostrar por página. El valor por defecto es 8.
+     *
+     * @return array Retorna un array con:
+     *               - 'correcto' (bool): Indica si la consulta fue exitosa.
+     *               - 'datos' (array|null): Los datos de las entradas correspondientes a la página solicitada.
+     *               - 'error' (string|null): Mensaje de error en caso de fallo.
      */
     public function listadopag($id, $pagina = 1, $resultados_por_pagina = 8)
     {
@@ -537,7 +563,16 @@ class modelo
         return $return;
     }
 
-    /** Función para obtener el total de entradas de un usuario específico */
+    /**
+     * Método para obtener el total de entradas de un usuario específico.
+     *
+     * @param int $id ID del usuario al cual se le cuentan las entradas.
+     *
+     * @return array Retorna un array con:
+     *               - 'correcto' (bool): Indica si la consulta fue exitosa.
+     *               - 'datos' (int|null): El total de entradas del usuario.
+     *               - 'error' (string|null): Mensaje de error en caso de fallo.
+     */
     public function totalEntradasPorUsuario($id)
     {
 
@@ -568,7 +603,14 @@ class modelo
         return $return;
     }
 
-    /** Función para obtener el total de todas las entradas sin filtrar por usuario */
+    /**
+     * Método para obtener el total de todas las entradas sin filtrar por usuario.
+     *
+     * @return array Retorna un array con:
+     *               - 'correcto' (bool): Indica si la consulta fue exitosa.
+     *               - 'datos' (int|null): El total de todas las entradas.
+     *               - 'error' (string|null): Mensaje de error en caso de fallo.
+     */
     public function totalEntradasGenerales()
     {
         $return = [
@@ -595,6 +637,14 @@ class modelo
         return $return;
     }
 
+    /**
+     * Método para obtener el total de registros en la tabla 'logs'.
+     *
+     * @return array Retorna un array con:
+     *               - 'correcto' (bool): Indica si la consulta fue exitosa.
+     *               - 'datos' (int|null): El total de registros en la tabla 'logs'.
+     *               - 'error' (string|null): Mensaje de error en caso de fallo.
+     */
     public function totalEntradasLog()
     {
         $return = [
@@ -621,6 +671,19 @@ class modelo
         return $return;
     }
 
+    /**
+     * Método para obtener un listado paginado de entradas ordenado por fecha, filtrado por el ID de usuario y el rol.
+     *
+     * @param int $idUsuario ID del usuario cuyo listado de entradas se desea obtener.
+     * @param int $pagina Número de página actual para la paginación.
+     * @param int $resultados_por_pagina Número de resultados por página.
+     * @param string $orden Orden en el que se desea ordenar los resultados ('ASC' o 'DESC').
+     *
+     * @return array Retorna un array con:
+     *               - 'correcto' (bool): Indica si la consulta fue exitosa.
+     *               - 'datos' (array|null): Datos de las entradas recuperadas.
+     *               - 'error' (string|null): Mensaje de error en caso de fallo.
+     */
     public function listadopagOrdenado($idUsuario, $pagina, $resultados_por_pagina, $orden)
     {
 
@@ -699,8 +762,14 @@ class modelo
     }
 
     /**
-     * Funcion para ejecutar una consulta sql 
-     * Creada para la ejecutar la tabla logs del ejercicio 2.13
+     * Método para ejecutar una consulta SQL genérica en la base de datos.
+     *
+     * @param string $sql Consulta SQL a ejecutar.
+     *
+     * @return array Retorna un array con:
+     *               - 'correcto' (bool): Indica si la consulta se ejecutó correctamente.
+     *               - 'datos' (array|null): Contiene el primer resultado en caso de consultas SELECT.
+     *               - 'error' (string|null): Mensaje de error en caso de fallo.
      */
     public function ejecutarSQL($sql)
     {
@@ -721,7 +790,14 @@ class modelo
     }
 
     /**
-     * Este método ejecutará el procedimiento almacenado cada vez que se llame.
+     * Método para registrar una operación en la tabla 'logs' utilizando un procedimiento almacenado.
+     *
+     * @param string $usuario Nombre o correo del usuario que realiza la operación.
+     * @param string $operacion Tipo de operación realizada (ejemplo: 'insertar', 'editar', 'eliminar').
+     *
+     * @return bool|array Retorna:
+     *                    - `true` si la operación se registró correctamente.
+     *                    - Un array con el mensaje de error en caso de fallo.
      */
     public function registrarLog($usuario, $operacion)
     {
@@ -738,8 +814,15 @@ class modelo
     }
 
     /**
-     * Listado por paginacion
-     * 
+     * Método para obtener un listado paginado de los registros en la tabla 'logs'.
+     *
+     * @param int $pagina Número de la página actual (por defecto, 1).
+     * @param int $resultados_por_pagina Cantidad de registros a mostrar por página (por defecto, 4).
+     *
+     * @return array Retorna un array con:
+     *               - 'correcto' (bool): Indica si la consulta se ejecutó correctamente.
+     *               - 'datos' (array|null): Contiene los registros obtenidos en formato asociativo.
+     *               - 'error' (string|null): Mensaje de error en caso de fallo.
      */
     public function listadopaglog($pagina = 1, $resultados_por_pagina = 4)
     {
@@ -775,6 +858,14 @@ class modelo
         return $return;
     }
 
+    /**
+     * Método para obtener el listado completo de los registros en la tabla 'logs'.
+     *
+     * @return array Retorna un array con:
+     *               - 'correcto' (bool): Indica si la consulta se ejecutó correctamente.
+     *               - 'datos' (array|null): Contiene los registros obtenidos en formato asociativo.
+     *               - 'error' (string|null): Mensaje de error en caso de fallo.
+     */
     public function delentlog($id)
     {
         // La función devuelve un array con dos valores:'correcto', que indica si la
@@ -809,6 +900,34 @@ class modelo
             $return["correcto"] = FALSE;
         }
 
+        return $return;
+    }
+
+    public function listadolog()
+    {
+        //Variable para devolver los resultados
+        $return = ["correcto" => FALSE, "datos" => NULL, "error" => NULL];
+
+        //Realizamos la consulta
+        try {
+
+            $sql = "SELECT * FROM logs";
+            $resultquery = $this->conexion->prepare($sql);
+            $resultquery->execute();
+
+
+            //Supervisamos si todo ha ido bien
+            if ($resultquery) {
+                //Si la consulta ha ido bien
+                $return['correcto'] = TRUE;
+                //Almacenamos todos los datos del usuario
+                $return['datos'] = $resultquery->fetchAll(PDO::FETCH_ASSOC);
+                //var_dump($return);
+            }
+        } catch (Exception $ex) {
+            $return['error'] = $ex->getMessage();
+        }
+        //Devolvemos la variable con sus parametros
         return $return;
     }
 }
